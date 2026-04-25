@@ -2,40 +2,40 @@ import React from 'react';
 import { Box, Typography, Container, Button } from '@mui/material';
 import { UserPlus } from 'lucide-react';
 // @ts-ignore
-import StudentsDataGrid from './StudentsDataGrid';
+import ContactsDataGrid from './ContactsDataGrid';
 // @ts-ignore
-import StudentDialog from './StudentDialog';
+import ContactDialog from './ContactDialog';
 // @ts-ignore
-import StudentDetailDialog from './StudentDetail';
+import ContactDetailDialog from './ContactDetail';
 
-const StudentsPage: React.FC = () => {
+const ContactsPage: React.FC = () => {
   const [isDialogOpen, setIsDialogOpen] = React.useState(false);
   const [isDetailOpen, setIsDetailOpen] = React.useState(false);
-  const [selectedStudent, setSelectedStudent] = React.useState<any>(null);
+  const [selectedContact, setSelectedContact] = React.useState<any>(null);
   const [refreshTrigger, setRefreshTrigger] = React.useState(0);
 
   const handleOpenAddDialog = () => {
-    setSelectedStudent(null);
+    setSelectedContact(null);
     setIsDialogOpen(true);
   };
 
-  const handleOpenDetailDialog = (student: any) => {
-    setSelectedStudent(student);
+  const handleOpenDetailDialog = (contact: any) => {
+    setSelectedContact(contact);
     setIsDetailOpen(true);
   };
 
-  const handleOpenEditDialog = (student: any) => {
-    setSelectedStudent(student);
+  const handleOpenEditDialog = (contact: any) => {
+    setSelectedContact(contact);
     setIsDialogOpen(true);
   };
 
-  const handleStudentSaved = (student: any) => {
-    console.log('Student saved:', student);
+  const handleContactSaved = (contact: any) => {
+    console.log('Contact saved:', contact);
     setRefreshTrigger((prev) => prev + 1);
   };
 
-  const handleStudentDeleted = (id: string) => {
-    console.log('Student deleted:', id);
+  const handleContactDeleted = (id: string) => {
+    console.log('Contact deleted:', id);
     setRefreshTrigger((prev) => prev + 1);
   };
 
@@ -44,10 +44,10 @@ const StudentsPage: React.FC = () => {
       <Box sx={{ mb: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
         <Box>
           <Typography variant="h4" gutterBottom fontWeight="bold">
-            Students
+            Contacts
           </Typography>
           <Typography variant="body1" color="text.secondary">
-            Manage your academy students, their profiles and health status.
+            Manage your academy contacts, parents, and guardians.
           </Typography>
         </Box>
         <Button
@@ -56,32 +56,32 @@ const StudentsPage: React.FC = () => {
           onClick={handleOpenAddDialog}
           sx={{ borderRadius: 2 }}
         >
-          Add Student
+          Add Contact
         </Button>
       </Box>
-      <StudentsDataGrid 
+      <ContactsDataGrid 
         refreshTrigger={refreshTrigger} 
         onSeeDetails={handleOpenDetailDialog}
         onEdit={handleOpenEditDialog}
       />
       
       {/* Detail View */}
-      <StudentDetailDialog
+      <ContactDetailDialog
         open={isDetailOpen}
         onClose={() => setIsDetailOpen(false)}
-        student={selectedStudent}
+        contact={selectedContact}
       />
 
       {/* Add/Edit Form */}
-      <StudentDialog
+      <ContactDialog
         open={isDialogOpen}
         onClose={() => setIsDialogOpen(false)}
-        onStudentSaved={handleStudentSaved}
-        onStudentDeleted={handleStudentDeleted}
-        student={selectedStudent}
+        onContactSaved={handleContactSaved}
+        onContactDeleted={handleContactDeleted}
+        contact={selectedContact}
       />
     </Container>
   );
 };
 
-export default StudentsPage;
+export default ContactsPage;

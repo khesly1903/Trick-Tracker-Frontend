@@ -1,17 +1,26 @@
 import api from './axiosInstance';
-import type { Student, CreateStudentDto, UUID } from './types';
+import type { Student, CreateStudentDto, CreateStudentWithContactsDto, UUID, PaginatedResponse } from './types';
 
 /**
- * Fetches all active students.
+ * Fetches all active students with pagination.
  */
-export const getAllStudents = (): Promise<Student[]> =>
-  api.get('/students').then((r) => r.data);
+export const getAllStudents = (
+  page: number = 1,
+  limit: number = 10,
+): Promise<PaginatedResponse<Student>> =>
+  api.get('/students', { params: { page, limit } }).then((r) => r.data);
 
 /**
- * Filters students by fullname.
+ * Filters students by fullname with pagination.
  */
-export const filterStudents = (query: string): Promise<Student[]> =>
-  api.get(`/students/filter?fullname=${query}`).then((r) => r.data);
+export const filterStudents = (
+  fullname: string,
+  page: number = 1,
+  limit: number = 10,
+): Promise<PaginatedResponse<Student>> =>
+  api
+    .get('/students/filter', { params: { fullname, page, limit } })
+    .then((r) => r.data);
 
 /**
  * Fetches a single student by Student ID or User ID.
@@ -23,6 +32,12 @@ export const getStudentById = (id: UUID): Promise<Student> =>
  * Creates a new student profile linked to a User ID.
  */
 export const createStudent = (data: CreateStudentDto): Promise<Student> =>
+  api.post('/students', data).then((r) => r.data);
+
+/**
+ * Creates a new student with inline new contacts.
+ */
+export const createStudentWithContacts = (data: CreateStudentWithContactsDto): Promise<Student> =>
   api.post('/students', data).then((r) => r.data);
 
 /**

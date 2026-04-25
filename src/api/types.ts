@@ -14,6 +14,33 @@ export interface PaginatedResponse<T> {
 
 // ────────── Enums ──────────
 export type SkillStatus = "NOT_STARTED" | "IN_PROGRESS" | "MASTERED";
+export type SkillType = "SKILL" | "TRICK";
+export type ClassType = "PRIVATE" | "GROUP" | "MAKEUP" | "WORKSHOP" | "EVENT";
+export type SessionType = "CLASS" | "MAKEUP" | "CANCELLED" | "EVENT";
+export type Gender = "BOYS" | "GIRLS" | "ALL_GENDER";
+
+export interface ProgramStage {
+  id: UUID;
+  programId: UUID;
+  name: string;
+  description?: string;
+  skills?: ProgramSkill[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateProgramStageDto {
+  name: string;
+  description?: string;
+}
+export type DayOfWeek =
+  | "MONDAY"
+  | "TUESDAY"
+  | "WEDNESDAY"
+  | "THURSDAY"
+  | "FRIDAY"
+  | "SATURDAY"
+  | "SUNDAY";
 
 export type Role =
   | "ADMIN"
@@ -46,13 +73,26 @@ export interface Student {
   dob: string;
   isActive: boolean;
   userId?: UUID;
+  injuries?: string[];
+  phoneNumber?: string;
+  secondaryPhoneNumber?: string;
+  whatsappPhoneNumber?: string;
+  school?: string;
+  contacts?: Contact[];
 }
 
 export interface Contact {
   id: UUID;
   name: string;
-  phone?: string;
+  surname: string;
   email?: string;
+  phoneNumber?: string;
+  secondaryPhoneNumber?: string;
+  whatsappPhoneNumber?: string;
+  roles?: Role[];
+  type: string;
+  isActive: boolean;
+  userId?: UUID;
 }
 
 export interface Instructor {
@@ -77,37 +117,86 @@ export interface Location {
 export interface Class {
   id: UUID;
   name: string;
+  type: ClassType;
   isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+  _count?: {
+    programs: number;
+  };
 }
 
 export interface ProgramSchedule {
-  dayOfWeek: number;
+  id: UUID;
+  programLocationId: UUID;
+  dayOfWeek: DayOfWeek;
   startTime: string;
-  endTime: string;
+  endTime?: string;
+  duration: number;
+  type: SessionType;
+}
+
+export interface ProgramLocation {
+  id: UUID;
+  programId: UUID;
+  locationId: UUID;
+  price: number;
+  capacity: number;
+  instructorId?: UUID;
+  isActive: boolean;
+  location?: Location;
+  instructor?: Instructor;
+  backupInstructors?: Instructor[];
+  schedules?: ProgramSchedule[];
+  _count?: { sessions: number };
 }
 
 export interface Program {
   id: UUID;
   name: string;
-  classId: UUID;
-  locationId: UUID;
-  instructorId: UUID;
   isActive: boolean;
-  schedules: ProgramSchedule[];
+  gender: Gender;
+  requiredEquipment: string[];
+  level?: string | null;
+  minAge: number;
+  maxAge: number;
+  startDate: string;
+  endDate: string;
+  classId: UUID;
+  createdAt: string;
+  updatedAt: string;
+  inheritedClass?: Class;
+  programLocations?: ProgramLocation[];
+  programStages?: ProgramStage[];
+  _count?: { programLocations: number };
 }
 
 export interface ProgramSession {
   id: UUID;
-  programId: UUID;
+  programLocationId: UUID;
+  scheduleId?: UUID;
   date: string;
-  notes?: string;
+  startTime: string;
+  endTime: string;
+  type: SessionType;
+  createdAt: string;
+  updatedAt: string;
+  programLocation?: {
+    id: UUID;
+    instructor?: { name: string; surname: string } | null;
+    program?: { id: UUID; name: string };
+    location?: { name: string };
+  };
 }
 
 export interface ProgramSkill {
   id: UUID;
-  programId: UUID;
+  stageId: UUID;
   name: string;
-  order: number;
+  type: SkillType;
+  description?: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface StudentProgram {
@@ -145,6 +234,20 @@ export interface CreateUserDto {
   role?: Role;
 }
 
+export type ContactType = "PARENT" | "GUARDIAN" | "EMERGENCY";
+export type ContactRelation = "PARENT" | "GUARDIAN" | "EMERGENCY";
+
+export interface NewContactInStudentDto {
+  email?: string;
+  name?: string;
+  surname?: string;
+  phoneNumber?: string;
+  whatsappPhoneNumber?: string;
+  secondaryPhoneNumber?: string;
+  type?: ContactType[];
+  relation?: ContactRelation;
+}
+
 export interface CreateStudentDto {
   name: string;
   surname: string;
@@ -154,12 +257,39 @@ export interface CreateStudentDto {
   type: string;
   dob: string;
   userId?: UUID;
+  injuries?: string[];
+  phoneNumber?: string;
+  secondaryPhoneNumber?: string;
+  whatsappPhoneNumber?: string;
+  school?: string;
+  contactIds?: UUID[];
+}
+
+export interface CreateStudentWithContactsDto {
+  name: string;
+  surname: string;
+  email: string;
+  roles?: Role[];
+  type: string;
+  dob: string;
+  injuries?: string[];
+  phoneNumber?: string;
+  secondaryPhoneNumber?: string;
+  whatsappPhoneNumber?: string;
+  school?: string;
+  contactIds?: UUID[];
+  newContacts?: NewContactInStudentDto[];
 }
 
 export interface CreateContactDto {
   name: string;
-  phone?: string;
+  surname: string;
   email?: string;
+  phoneNumber?: string;
+  secondaryPhoneNumber?: string;
+  whatsappPhoneNumber?: string;
+  roles?: Role[];
+  type: string;
 }
 
 export interface CreateInstructorDto {
@@ -180,14 +310,39 @@ export interface CreateLocationDto {
 
 export interface CreateClassDto {
   name: string;
+  type: ClassType;
+  isActive?: boolean;
 }
 
 export interface CreateProgramDto {
   name: string;
+  startDate: string;
+  endDate: string;
+  gender: Gender;
+  minAge: number;
+  maxAge: number;
+  level?: string;
   classId: UUID;
+  requiredEquipment?: string[];
+  isActive?: boolean;
+}
+
+export interface CreateProgramLocationDto {
+  programId: UUID;
   locationId: UUID;
-  instructorId: UUID;
-  schedules: ProgramSchedule[];
+  price: number;
+  capacity: number;
+  instructorId?: UUID;
+  backupInstructorIds?: UUID[];
+}
+
+export interface CreateProgramScheduleDto {
+  programLocationId: UUID;
+  dayOfWeek: DayOfWeek;
+  startTime: string;
+  endTime?: string;
+  duration: number;
+  type: SessionType;
 }
 
 export interface CreateSessionDto {
@@ -198,7 +353,12 @@ export interface CreateSessionDto {
 
 export interface CreateProgramSkillDto {
   name: string;
-  order?: number;
+  type: SkillType;
+  description?: string;
+}
+
+export interface BulkAddProgramSkillsDto {
+  skills: CreateProgramSkillDto[];
 }
 
 export interface EnrollStudentDto {

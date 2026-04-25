@@ -8,6 +8,14 @@ export const getSessionsByProgramId = (
     .get(`/program-sessions?programId=${programId}`)
     .then((r) => r.data);
 
+export const getSessionsForWeek = (
+  dateFrom: string,
+  dateTo: string,
+): Promise<ProgramSession[]> =>
+  api
+    .get(`/program-sessions?dateFrom=${dateFrom}&dateTo=${dateTo}`)
+    .then((r) => r.data);
+
 export const getSessionById = (id: UUID): Promise<ProgramSession> =>
   api.get(`/program-sessions/${id}`).then((r) => r.data);
 

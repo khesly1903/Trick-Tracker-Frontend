@@ -13,7 +13,8 @@ export const createClass = (data: CreateClassDto): Promise<Class> =>
 export const updateClass = (
   id: UUID,
   data: Partial<CreateClassDto>,
-): Promise<Class> => api.patch(`/classes/${id}`, data).then((r) => r.data);
+): Promise<Class> =>
+  api.patch(`/classes/${id}`, data).then((r) => r.data);
 
 export const softDeleteClass = (id: UUID): Promise<Class> =>
   api.delete(`/classes/${id}`).then((r) => r.data);
