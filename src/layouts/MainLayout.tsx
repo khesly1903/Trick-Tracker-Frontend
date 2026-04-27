@@ -3,7 +3,6 @@ import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import {
   Box,
   Drawer,
-  Toolbar,
   List,
   Typography,
   Divider,
@@ -61,21 +60,21 @@ const MainLayout: React.FC = () => {
   ];
 
   const drawer = (
-
-
-    
-    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%', borderRadius:1}}>
-      <Toolbar 
-        sx={{ 
-          backgroundColor: mode === 'light' ? 'primary.main' : 'background.paper', 
-          color: mode === 'light' ? 'white' : 'primary.main',
-          minHeight: '4rem !important' 
+    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+      <Box
+        sx={{
+          display: 'flex',
+          alignItems: 'center',
+          px: '1rem',
+          minHeight: '4rem',
+          backgroundColor: mode === 'light' ? 'primary.main' : 'primary.dark',
+          borderRadius: '0.5rem 0.5rem 0 0',
         }}
       >
-        <Typography variant="h6" noWrap component="div" >
+        <Typography variant="h6" noWrap component="div" sx={{ color: 'white', fontWeight: 700, letterSpacing: '0.05em' }}>
           TRICKTRACKER
         </Typography>
-      </Toolbar>
+      </Box>
 
       <Divider />
       
@@ -141,45 +140,52 @@ const MainLayout: React.FC = () => {
   );
 
   return (
-    <Box sx={{ display: 'flex' }}>
-      <Box component="nav" sx={{ width: { sm: drawerWidth }, flexShrink: { sm: 0 } }}>
-        <Drawer
-          variant="temporary"
-          open={mobileOpen}
-          onClose={handleDrawerToggle}
-          ModalProps={{ keepMounted: true }}
-          sx={{
-            display: { xs: 'block', sm: 'none' },
-            '& .MuiDrawer-paper': { boxSizing: 'border-box', width: drawerWidth, borderRadius: 0 },
-          }}
-        >
-          {drawer}
-        </Drawer>
-        <Drawer
-          variant="permanent"
-          sx={{
-            display: { xs: 'none', sm: 'block' },
-            '& .MuiDrawer-paper': { 
-              boxSizing: 'border-box', 
-              width: drawerWidth, 
-              borderRight:'none',
-              borderRadius: 0 
-            },
-          }}
-          open
-        >
-          {drawer}
-        </Drawer>
+    <Box sx={{ display: 'flex', minHeight: '100vh', bgcolor: 'background.default' }}>
+      {/* Mobile: overlay drawer */}
+      <Drawer
+        variant="temporary"
+        open={mobileOpen}
+        onClose={handleDrawerToggle}
+        ModalProps={{ keepMounted: true }}
+        sx={{
+          display: { xs: 'block', sm: 'none' },
+          '& .MuiDrawer-paper': { boxSizing: 'border-box', width: drawerWidth, borderRadius: 0 },
+        }}
+      >
+        {drawer}
+      </Drawer>
+
+      {/* Desktop: floating sidebar */}
+      <Box
+        component="nav"
+        sx={{
+          display: { xs: 'none', sm: 'flex' },
+          flexDirection: 'column',
+          position: 'fixed',
+          top: '0.5rem',
+          left: '0.5rem',
+          width: drawerWidth,
+          height: 'calc(100vh - 1rem)',
+          bgcolor: 'background.paper',
+          borderRadius: '0.5rem',
+          overflow: 'hidden',
+          zIndex: (theme) => theme.zIndex.drawer,
+          boxShadow: mode === 'light'
+            ? '0 4px 24px rgba(0,0,0,0.10)'
+            : '0 4px 24px rgba(0,0,0,0.45)',
+        }}
+      >
+        {drawer}
       </Box>
 
+      {/* Main content */}
       <Box
         component="main"
         sx={{
           flexGrow: 1,
-          p: '1.5rem',
-          width: { sm: `calc(100% - ${drawerWidth})` },
+          ml: { sm: `calc(${drawerWidth} + 1rem)` },
+          p: '0.5rem',
           minHeight: '100vh',
-          backgroundColor: 'background.default',
         }}
       >
         <Container maxWidth="xl" sx={{ mt: '1rem' }}>
