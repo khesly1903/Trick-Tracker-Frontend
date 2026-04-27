@@ -13,7 +13,6 @@ export interface PaginatedResponse<T> {
 }
 
 // ────────── Enums ──────────
-export type SkillStatus = "NOT_STARTED" | "IN_PROGRESS" | "MASTERED";
 export type SkillType = "SKILL" | "TRICK";
 export type ClassType = "PRIVATE" | "GROUP" | "MAKEUP" | "WORKSHOP" | "EVENT";
 export type SessionType = "CLASS" | "MAKEUP" | "CANCELLED" | "EVENT";
@@ -202,15 +201,33 @@ export interface ProgramSkill {
 export interface StudentProgram {
   id: UUID;
   studentId: UUID;
-  programId: UUID;
+  programLocationId: UUID;
   isActive: boolean;
+  student?: { id: UUID; name: string; surname: string };
+  programLocation?: {
+    id: UUID;
+    program: { id: UUID; name: string };
+    location: { id: UUID; name: string; address: string };
+  };
 }
 
 export interface StudentProgramSkill {
   id: UUID;
   studentProgramId: UUID;
   programSkillId: UUID;
-  status: SkillStatus;
+  status: number;
+  note?: string | null;
+  updatedById?: string | null;
+  achievedAt?: string | null;
+  createdAt: string;
+  updatedAt: string;
+  programSkill?: ProgramSkill & { stage?: ProgramStage };
+}
+
+export interface UpdateStudentProgramSkillDto {
+  status?: number;
+  note?: string;
+  updatedById?: string;
 }
 
 export interface AttendanceRecord {
@@ -363,7 +380,7 @@ export interface BulkAddProgramSkillsDto {
 
 export interface EnrollStudentDto {
   studentId: UUID;
-  programId: UUID;
+  programLocationId: UUID;
 }
 
 export interface BulkAttendanceDto {
@@ -373,7 +390,7 @@ export interface BulkAttendanceDto {
 
 export interface GetEnrollmentsParams {
   studentId?: UUID;
-  programId?: UUID;
+  programLocationId?: UUID;
 }
 
 export interface DashboardData {

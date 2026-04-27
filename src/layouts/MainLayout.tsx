@@ -17,17 +17,19 @@ import {
 } from '@mui/material';
 
 import {
-  LayoutDashboard, 
-  Users, 
-  Landmark, 
-  BookOpenCheck, 
-  // UserCheck, 
-  Settings, 
+  LayoutDashboard,
+  Users,
+  Landmark,
+  BookOpenCheck,
+  // UserCheck,
+  Settings,
   MapPin,
   ContactRound,
   Dumbbell,
-  Moon, 
-  Sun
+  Moon,
+  Sun,
+  ClipboardList,
+  Activity,
 } from "lucide-react"
 
 import { useColorMode } from '../theme/ThemeContext';
@@ -51,13 +53,18 @@ const MainLayout: React.FC = () => {
     { text: 'Instructors', icon: <Dumbbell strokeWidth={1} /> ,path: '/instructors' },
     { text: 'Classes', icon: <Landmark strokeWidth={1} />, path: '/classes' },
     { text: 'Programs', icon: <BookOpenCheck strokeWidth={1} />, path: '/programs' },
+    { text: 'Enrollments', icon: <ClipboardList strokeWidth={1} />, path: '/enrollments' },
+    { text: 'Tracker', icon: <Activity strokeWidth={1} />, path: '/tracker' },
     // { text: 'Attendance', icon: <UserCheck strokeWidth={1} />, path: '/attendance' },
     { text: 'Locations', icon: <MapPin strokeWidth={1} />, path: '/locations' },
     { text: 'Management', icon: <Settings strokeWidth={1} />, path: '/management' },
   ];
 
   const drawer = (
-    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+
+
+    
+    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%', borderRadius:1}}>
       <Toolbar 
         sx={{ 
           backgroundColor: mode === 'light' ? 'primary.main' : 'background.paper', 
@@ -130,6 +137,7 @@ const MainLayout: React.FC = () => {
 
       </Box>
     </Box>
+
   );
 
   return (

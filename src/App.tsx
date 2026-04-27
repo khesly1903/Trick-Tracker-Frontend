@@ -8,6 +8,8 @@ import InstructorsPage from './pages/instrucotrs';
 import ClassesPage from './pages/classes';
 import ProgramsPage from './pages/programs';
 import LocationsPage from './pages/locations'
+import EnrollmentsPage from './pages/enrollments'
+import TrackerPage from './pages/tracker'
 
 function App() {
   return (
@@ -21,6 +23,8 @@ function App() {
             <Route path="instructors" element={<InstructorsPage />} />
             <Route path="classes" element={<ClassesPage />} />
             <Route path="programs" element={<ProgramsPage />} />
+            <Route path="enrollments" element={<EnrollmentsPage />} />
+            <Route path="tracker" element={<TrackerPage />} />
             {/* <Route path="attendance" element={<div>Attendance Page Placeholder</div>} /> */}
             <Route path="locations" element={<LocationsPage/>} />
             <Route path="management" element={<div>Management Page Placeholder</div>} />

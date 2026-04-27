@@ -1,6 +1,13 @@
 import api from './axiosInstance';
 import type { ProgramLocation, CreateProgramLocationDto, UUID } from './types';
 
+export const getAllProgramLocations = (
+  programId?: UUID,
+): Promise<ProgramLocation[]> =>
+  api
+    .get('/program-locations', { params: programId ? { programId } : {} })
+    .then((r) => r.data);
+
 export const createProgramLocation = (
   data: CreateProgramLocationDto,
 ): Promise<ProgramLocation> =>
