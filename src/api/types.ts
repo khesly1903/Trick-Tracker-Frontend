@@ -1,5 +1,28 @@
 export type UUID = string;
 
+// ────────── Auth ──────────
+export interface AuthUser {
+  id: UUID;
+  email: string;
+  roles: Role[];
+}
+
+export interface AuthResponse {
+  accessToken: string;
+  refreshToken: string;
+  user: AuthUser;
+}
+
+export interface LoginDto {
+  email: string;
+  password: string;
+}
+
+export interface RegisterDto {
+  email: string;
+  password: string;
+}
+
 export interface PaginationMeta {
   total: number;
   page: number;

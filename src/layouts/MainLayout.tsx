@@ -13,6 +13,8 @@ import {
   Container,
   Switch,
   FormControlLabel,
+  IconButton,
+  Tooltip,
 } from '@mui/material';
 
 import {
@@ -32,6 +34,8 @@ import {
 } from "lucide-react"
 
 import { useColorMode } from '../theme/ThemeContext';
+import { useAuth } from '../context/AuthContext';
+import LogOut from '@mui/icons-material/Logout';
 
 const drawerWidth = '16.25rem'; // ~260px in rem
 
@@ -40,13 +44,14 @@ const MainLayout: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { toggleColorMode, mode } = useColorMode();
+  const { logout, user } = useAuth();
 
   const handleDrawerToggle = () => {
     setMobileOpen(!mobileOpen);
   };
 
   const menuItems = [
-    { text: 'Dashboard', icon: <LayoutDashboard strokeWidth={1}/>, path: '/' },
+    { text: 'Dashboard', icon: <LayoutDashboard strokeWidth={1}/>, path: '/dashboard' },
     { text: 'Students', icon: <Users strokeWidth={1} />, path: '/students' },
     { text: 'Contacts', icon: <ContactRound strokeWidth={1} />, path: '/contacts' },
     { text: 'Instructors', icon: <Dumbbell strokeWidth={1} /> ,path: '/instructors' },
@@ -116,9 +121,9 @@ const MainLayout: React.FC = () => {
         <Divider sx={{ mb: '1rem' }} />
         <FormControlLabel
           control={
-            <Switch 
-              checked={mode === 'dark'} 
-              onChange={toggleColorMode} 
+            <Switch
+              checked={mode === 'dark'}
+              onChange={toggleColorMode}
               color="secondary"
             />
           }
@@ -132,8 +137,19 @@ const MainLayout: React.FC = () => {
           }
           sx={{ width: '100%' }}
         />
-       
 
+        <Divider sx={{ my: '0.75rem' }} />
+
+        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <Typography variant="body2" color="text.secondary" noWrap sx={{ flex: 1, mr: 1 }}>
+            {user?.email}
+          </Typography>
+          <Tooltip title="Log out">
+            <IconButton size="small" onClick={logout} color="default">
+              <LogOut fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        </Box>
       </Box>
     </Box>
 

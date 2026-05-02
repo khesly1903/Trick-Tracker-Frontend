@@ -23,8 +23,9 @@ import {
   Divider,
   Stack,
   Tooltip,
+  useTheme,
 } from '@mui/material';
-import { MapPin, Clock } from 'lucide-react';
+import { MapPin, Clock, Star, StickyNote, HelpCircle } from 'lucide-react';
 import { getAllProgramLocations } from '../../api/programLocations.api';
 import { getEnrollments } from '../../api/studentPrograms.api';
 import { getSkillsForEnrollment, updateSkill } from '../../api/studentProgramSkills.api';
@@ -53,6 +54,7 @@ interface Props {
 }
 
 const TrackerDialog: React.FC<Props> = ({ open, onClose, program }) => {
+  // const theme = useTheme();
   const [view, setView] = useState<View>('locations');
   const [locations, setLocations] = useState<ProgramLocation[]>([]);
   const [selectedLocation, setSelectedLocation] = useState<ProgramLocation | null>(null);
@@ -60,6 +62,7 @@ const TrackerDialog: React.FC<Props> = ({ open, onClose, program }) => {
   const [selectedEnrollment, setSelectedEnrollment] = useState<StudentProgram | null>(null);
   const [skillsByStage, setSkillsByStage] = useState<SkillsByStage[]>([]);
   const [changes, setChanges] = useState<Record<UUID, UpdateStudentProgramSkillDto>>({});
+  const [openNotes, setOpenNotes] = useState<Set<UUID>>(new Set());
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -79,6 +82,7 @@ const TrackerDialog: React.FC<Props> = ({ open, onClose, program }) => {
     setSelectedEnrollment(null);
     setSkillsByStage([]);
     setChanges({});
+    setOpenNotes(new Set());
     setError(null);
     onClose();
   };
@@ -115,6 +119,7 @@ const TrackerDialog: React.FC<Props> = ({ open, onClose, program }) => {
       }
       setSkillsByStage(Array.from(stageMap.values()));
       setChanges({});
+      setOpenNotes(new Set());
       setView('skills');
     } catch {
       setError('Failed to load skills.');
@@ -165,7 +170,14 @@ const TrackerDialog: React.FC<Props> = ({ open, onClose, program }) => {
     <Dialog open={open} onClose={handleClose} maxWidth="md" fullWidth>
       <DialogTitle sx={{ fontWeight: 700 }}>{dialogTitle()}</DialogTitle>
 
-      <DialogContent sx={{ minHeight: '24rem', overflowX: 'hidden' }}>
+      <DialogContent sx={{
+        minHeight: '24rem',
+        overflowY: 'auto',
+        overflowX: 'hidden',
+        '&::-webkit-scrollbar': { display: 'none' },
+        msOverflowStyle: 'none',
+        scrollbarWidth: 'none',
+      }}>
         {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
 
         {loading ? (
@@ -285,9 +297,16 @@ const TrackerDialog: React.FC<Props> = ({ open, onClose, program }) => {
                 {skillsByStage.length === 0 ? (
                   <Alert severity="info">No skills found for this student&apos;s enrollment.</Alert>
                 ) : (
-                  <Stack spacing={3}>
+                  <Stack spacing={2}>
                     {skillsByStage.map(({ stage, skills }) => (
-                      <Box key={stage.id}>
+                      <Card
+                        key={stage.id}
+                        variant="outlined"
+                        sx={{
+                          borderRadius: '0.75rem',
+                        }}
+                      >
+                        <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
                         <Typography
                           variant="overline"
                           color="primary"
@@ -300,82 +319,120 @@ const TrackerDialog: React.FC<Props> = ({ open, onClose, program }) => {
                             {stage.description}
                           </Typography>
                         )}
-                        <Divider sx={{ mb: 1.5 }} />
-                        <Stack spacing={1.5}>
+                        <Divider sx={{ mb: 1.5, mt: 0.5 }} />
+                        <Stack spacing={1}>
                           {skills.map((skill) => {
                             const currentStatus = changes[skill.id]?.status ?? skill.status;
                             const currentNote = changes[skill.id]?.note ?? skill.note ?? '';
+                            const isTrick = skill.programSkill?.type === 'TRICK';
                             return (
                               <Card
                                 key={skill.id}
                                 variant="outlined"
-                                sx={{ borderRadius: '0.5rem', p: 0 }}
+                                sx={{
+                                  borderRadius: '0.5rem',
+                                  borderColor: isTrick ? '#C9A84C' : undefined,
+                                }}
                               >
-                                <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
-                                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
-                                    <Box>
-                                      <Typography variant="body2" fontWeight={700}>
-                                        {skill.programSkill?.name}
-                                      </Typography>
-                                      {skill.programSkill?.description && (
-                                        <Typography variant="caption" color="text.secondary">
-                                          {skill.programSkill.description}
-                                        </Typography>
-                                      )}
-                                    </Box>
+                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, px: 2, py: 1.25 }}>
+                                  {/* Left: chip + name side by side */}
+                                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, width: '14rem', flexShrink: 0, minWidth: 0 }}>
                                     <Chip
                                       label={skill.programSkill?.type ?? 'SKILL'}
                                       size="small"
-                                      color={skill.programSkill?.type === 'TRICK' ? 'secondary' : 'default'}
+                                      icon={isTrick ? <Star size={10} fill="#C9A84C" color="#C9A84C" /> : undefined}
                                       variant="outlined"
-                                      sx={{ fontSize: '0.65rem' }}
+                                      sx={{
+                                        fontSize: '0.65rem',
+                                        flexShrink: 0,
+                                        height: '22px',
+                                        width: '4.5rem',
+                                        '& .MuiChip-label': { px: 0.5 },
+                                        ...(isTrick ? {
+                                          borderColor: '#C9A84C',
+                                          color: '#C9A84C',
+                                          '& .MuiChip-icon': { color: '#C9A84C' },
+                                        } : {}),
+                                      }}
+                                    />
+                                    {skill.programSkill?.description && (
+                                      <Tooltip title={skill.programSkill.description} placement="top" arrow>
+                                        <Box sx={{ display: 'flex', alignItems: 'center', color: 'text.secondary', cursor: 'help', flexShrink: 0 }}>
+                                          <HelpCircle size={14} />
+                                        </Box>
+                                      </Tooltip>
+                                    )}
+                                    <Typography variant="body2" fontWeight={700} sx={{ wordBreak: 'break-word' }}>
+                                      {skill.programSkill?.name}
+                                    </Typography>
+                                  </Box>
+
+                                  {/* Right: dots + note button grouped */}
+                                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 5, ml: 'auto', flexShrink: 0 }}>
+                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                      {[
+                                        { value: 1, color: '#ef5350', label: 'Not there yet' },
+                                        { value: 2, color: '#ffa726', label: 'Getting there' },
+                                        { value: 3, color: '#66bb6a', label: 'Mastered' },
+                                      ].map((opt) => (
+                                        <Tooltip key={opt.value} title={opt.label} placement="top">
+                                          <Box
+                                            onClick={() => handleSkillChange(
+                                              skill.id,
+                                              'status',
+                                              currentStatus === opt.value ? 0 : opt.value
+                                            )}
+                                            sx={{
+                                              width: 26,
+                                              height: 26,
+                                              borderRadius: '50%',
+                                              backgroundColor: opt.color,
+                                              cursor: 'pointer',
+                                              opacity: currentStatus === opt.value ? 1 : 0.25,
+                                              transition: 'opacity 0.15s, transform 0.15s',
+                                              '&:hover': { opacity: 0.85, transform: 'scale(1.15)' },
+                                            }}
+                                          />
+                                        </Tooltip>
+                                      ))}
+                                    </Box>
+                                    <Button
+                                    size="small"
+                                    variant="outlined"
+                                    color="inherit"
+                                    startIcon={<StickyNote size={13} />}
+                                    onClick={() => setOpenNotes((prev) => {
+                                      const next = new Set(prev);
+                                      next.has(skill.id) ? next.delete(skill.id) : next.add(skill.id);
+                                      return next;
+                                    })}
+                                    sx={{ flexShrink: 0, fontSize: '0.7rem', px: 1 }}
+                                  >
+                                    Note
+                                  </Button>
+                                  </Box>
+                                </Box>
+                                {openNotes.has(skill.id) && (
+                                  <Box sx={{ px: 2, pb: 1.5 }}>
+                                    <TextField
+                                      size="small"
+                                      placeholder="Add note..."
+                                      multiline
+                                      rows={2}
+                                      fullWidth
+                                      value={currentNote}
+                                      inputProps={{ maxLength: 256 }}
+                                      onChange={(e) => handleSkillChange(skill.id, 'note', e.target.value)}
+                                      sx={{ '& .MuiOutlinedInput-root': { borderRadius: '0.5rem' } }}
                                     />
                                   </Box>
-                                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
-                                    {[
-                                      { value: 1, color: '#ef5350', label: 'Not there yet' },
-                                      { value: 2, color: '#ffa726', label: 'Getting there' },
-                                      { value: 3, color: '#66bb6a', label: 'Mastered' },
-                                    ].map((opt) => (
-                                      <Tooltip key={opt.value} title={opt.label}>
-                                        <Box
-                                          onClick={() => handleSkillChange(
-                                            skill.id,
-                                            'status',
-                                            currentStatus === opt.value ? 0 : opt.value
-                                          )}
-                                          sx={{
-                                            width: 28,
-                                            height: 28,
-                                            borderRadius: '50%',
-                                            backgroundColor: opt.color,
-                                            cursor: 'pointer',
-                                            opacity: currentStatus === opt.value ? 1 : 0.25,
-                                            transition: 'opacity 0.15s, transform 0.15s',
-                                            '&:hover': { opacity: 0.85, transform: 'scale(1.15)' },
-                                          }}
-                                        />
-                                      </Tooltip>
-                                    ))}
-                                  </Box>
-                                  <TextField
-                                    size="small"
-                                    placeholder="Add note..."
-                                    multiline
-                                    rows={2}
-                                    fullWidth
-                                    value={currentNote}
-                                    onChange={(e) =>
-                                      handleSkillChange(skill.id, 'note', e.target.value)
-                                    }
-                                    sx={{ '& .MuiOutlinedInput-root': { borderRadius: '0.5rem' } }}
-                                  />
-                                </CardContent>
+                                )}
                               </Card>
                             );
                           })}
                         </Stack>
-                      </Box>
+                        </CardContent>
+                      </Card>
                     ))}
                   </Stack>
                 )}

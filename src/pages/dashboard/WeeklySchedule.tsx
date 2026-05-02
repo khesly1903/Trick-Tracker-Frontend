@@ -15,6 +15,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Clock,
+  MapPin,
 } from 'lucide-react';
 import { getSessionsForWeek } from '../../api/programSessions.api';
 import type { ProgramSession } from '../../api/types';
@@ -241,6 +242,24 @@ const WeeklySchedule: React.FC = () => {
                         >
                           {programName}
                         </Typography>
+                        {locationName && (
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: '3px', mb: '0.15rem' }}>
+                            <MapPin size={9} color={theme.palette.text.secondary} />
+                            <Typography
+                              variant="caption"
+                              sx={{
+                                fontSize: '0.6rem',
+                                color: 'text.secondary',
+                                fontWeight: 500,
+                                overflow: 'hidden',
+                                textOverflow: 'ellipsis',
+                                whiteSpace: 'nowrap',
+                              }}
+                            >
+                              {locationName}
+                            </Typography>
+                          </Box>
+                        )}
                         <Typography
                           variant="caption"
                           sx={{
