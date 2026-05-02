@@ -1,12 +1,15 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import type { ReactNode } from 'react';
+import { CircularProgress, Box } from '@mui/material';
 import { ColorModeProvider } from './theme/ThemeContext';
-import { AuthProvider } from './context/AuthContext';
+import { AuthProvider, useAuth } from './context/AuthContext';
 import PrivateRoute from './components/PrivateRoute';
 import MainLayout from './layouts/MainLayout';
 
 import LandingPage from './pages/landing';
 import LoginPage from './pages/login';
 import SignupPage from './pages/signup';
+import SetupPage from './pages/setup';
 
 import Dashboard from './pages/dashboard';
 import StudentsPage from './pages/students';
@@ -18,6 +21,20 @@ import LocationsPage from './pages/locations';
 import EnrollmentsPage from './pages/enrollments';
 import TrackerPage from './pages/tracker';
 
+function SetupRoute({ children }: { children: ReactNode }) {
+  const { isAuthenticated, isLoading, user } = useAuth();
+  if (isLoading) {
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+        <CircularProgress />
+      </Box>
+    );
+  }
+  if (!isAuthenticated) return <Navigate to="/login" replace />;
+  if (user?.academyId) return <Navigate to="/dashboard" replace />;
+  return <>{children}</>;
+}
+
 function App() {
   return (
     <ColorModeProvider>
@@ -28,6 +45,7 @@ function App() {
             <Route path="/" element={<LandingPage />} />
             <Route path="/login" element={<LoginPage />} />
             <Route path="/signup" element={<SignupPage />} />
+            <Route path="/setup" element={<SetupRoute><SetupPage /></SetupRoute>} />
 
             {/* Private routes */}
             <Route

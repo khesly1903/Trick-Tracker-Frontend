@@ -5,6 +5,27 @@ export interface AuthUser {
   id: UUID;
   email: string;
   roles: Role[];
+  academyId: UUID | null;
+}
+
+export interface Academy {
+  id: UUID;
+  name: string;
+  description?: string;
+  logoUrl?: string;
+  phone?: string;
+  address?: string;
+  isActive: boolean;
+  ownerId: UUID;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface SetupAcademyDto {
+  name: string;
+  description?: string;
+  phone?: string;
+  address?: string;
 }
 
 export interface AuthResponse {

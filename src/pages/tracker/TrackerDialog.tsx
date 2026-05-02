@@ -23,7 +23,7 @@ import {
   Divider,
   Stack,
   Tooltip,
-  useTheme,
+  // useTheme,
 } from '@mui/material';
 import { MapPin, Clock, Star, StickyNote, HelpCircle } from 'lucide-react';
 import { getAllProgramLocations } from '../../api/programLocations.api';

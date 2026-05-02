@@ -52,7 +52,7 @@ export default function SignupPage() {
     setLoading(true);
     try {
       await register({ email, password });
-      navigate('/dashboard');
+      navigate('/setup');
     } catch (err: any) {
       const msg = err?.response?.data?.message;
       setError(Array.isArray(msg) ? msg.join(', ') : msg || 'Registration failed. Please try again.');

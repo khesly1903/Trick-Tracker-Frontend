@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import type { ReactNode } from 'react';
 
 export default function PrivateRoute({ children }: { children: ReactNode }) {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading, user } = useAuth();
 
   if (isLoading) {
     return (
@@ -16,6 +16,10 @@ export default function PrivateRoute({ children }: { children: ReactNode }) {
 
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
+  }
+
+  if (user && user.academyId === null) {
+    return <Navigate to="/setup" replace />;
   }
 
   return <>{children}</>;
