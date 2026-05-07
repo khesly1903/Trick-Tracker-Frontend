@@ -35,7 +35,7 @@ export interface AuthResponse {
 }
 
 export interface LoginDto {
-  email: string;
+  identifier: string;
   password: string;
 }
 
@@ -324,6 +324,7 @@ export interface CreateStudentDto {
   whatsappPhoneNumber?: string;
   school?: string;
   contactIds?: UUID[];
+  enrollmentId?: string;
 }
 
 export interface CreateStudentWithContactsDto {
@@ -340,6 +341,7 @@ export interface CreateStudentWithContactsDto {
   school?: string;
   contactIds?: UUID[];
   newContacts?: NewContactInStudentDto[];
+  enrollmentId?: string;
 }
 
 export interface CreateContactDto {
@@ -351,6 +353,7 @@ export interface CreateContactDto {
   whatsappPhoneNumber?: string;
   roles?: Role[];
   type: string;
+  enrollmentId?: string;
 }
 
 export interface CreateInstructorDto {
@@ -362,6 +365,7 @@ export interface CreateInstructorDto {
   phoneNumber?: string;
   secondaryPhoneNumber?: string;
   whatsappPhoneNumber?: string;
+  enrollmentId?: string;
 }
 
 export interface CreateLocationDto {
@@ -435,6 +439,57 @@ export interface BulkAttendanceDto {
 export interface GetEnrollmentsParams {
   studentId?: UUID;
   programLocationId?: UUID;
+}
+
+// ────────── Portal ──────────
+
+export interface PortalStudentProgram {
+  id: UUID;
+  isActive: boolean;
+  programLocation: {
+    id: UUID;
+    price: number;
+    capacity: number;
+    location: Location;
+    instructor?: Instructor | null;
+    schedules: ProgramSchedule[];
+    program: Program & { programStages: (ProgramStage & { skills: ProgramSkill[] })[] };
+  };
+  studentProgramSkills: (StudentProgramSkill & { programSkill: ProgramSkill })[];
+}
+
+export interface PortalStudentData {
+  id: UUID;
+  name: string;
+  surname: string;
+  enrollmentId?: string;
+  studentPrograms: PortalStudentProgram[];
+}
+
+export interface PortalParentStudent {
+  id: UUID;
+  name: string;
+  surname: string;
+  enrollmentId?: string;
+  isActive: boolean;
+  programCount: number;
+}
+
+export interface PortalInstructorProgramLocation {
+  id: UUID;
+  program: Program & { programStages: (ProgramStage & { skills: ProgramSkill[] })[] };
+  location: Location;
+  schedules: ProgramSchedule[];
+  studentPrograms: {
+    id: UUID;
+    student: { id: UUID; name: string; surname: string };
+    studentProgramSkills: (StudentProgramSkill & { programSkill: ProgramSkill })[];
+  }[];
+}
+
+export interface UpdateSkillDto {
+  status: number;
+  note?: string;
 }
 
 export interface DashboardData {

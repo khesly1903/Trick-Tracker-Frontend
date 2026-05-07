@@ -17,17 +17,17 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 
 const highlights = [
+  'Full control over students, instructors & contacts',
   'Real-time skill progression tracking',
-  'Full program and schedule management',
-  'Attendance monitoring across sessions',
-  'Multi-role access for your whole team',
+  'Program and schedule management',
+  'Attendance monitoring across all sessions',
 ];
 
 export default function LoginPage() {
   const navigate = useNavigate();
   const { login } = useAuth();
 
-  const [email, setEmail] = useState('');
+  const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
@@ -38,7 +38,7 @@ export default function LoginPage() {
     setError('');
     setLoading(true);
     try {
-      await login({ email, password });
+      await login({ identifier, password });
       navigate('/dashboard');
     } catch (err: any) {
       setError(err?.response?.data?.message || 'Invalid email or password.');
@@ -68,10 +68,10 @@ export default function LoginPage() {
           </Typography>
         </Stack>
         <Typography variant="h2" sx={{ mb: '1rem', lineHeight: 1.2 }}>
-          Welcome back
+          Academy Admin Login
         </Typography>
         <Typography variant="body1" sx={{ mb: '3rem', opacity: 0.85 }}>
-          Log in to manage your academy — students, programs, and skill progress all in one place.
+          This page is for academy administrators only. Log in to manage your academy — students, programs, and skill progress all in one place.
         </Typography>
         <Stack spacing={1.5}>
           {highlights.map((h) => (
@@ -112,10 +112,10 @@ export default function LoginPage() {
           </Stack>
 
           <Typography variant="h3" sx={{ mb: '0.5rem' }}>
-            Log In
+            Admin Login
           </Typography>
           <Typography variant="body2" color="text.secondary" sx={{ mb: '2rem' }}>
-            Enter your credentials to access the dashboard.
+            Academy administrators only. Enter your email and password.
           </Typography>
 
           {error && (
@@ -128,12 +128,12 @@ export default function LoginPage() {
             <Stack spacing={2}>
               <TextField
                 label="Email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                type="text"
+                value={identifier}
+                onChange={(e) => setIdentifier(e.target.value)}
                 required
                 fullWidth
-                autoComplete="email"
+                autoComplete="username"
                 autoFocus
               />
               <TextField
@@ -167,14 +167,25 @@ export default function LoginPage() {
           </Box>
 
           <Typography variant="body2" color="text.secondary" sx={{ mt: '2rem', textAlign: 'center' }}>
-            Academy admin?{' '}
+            New academy?{' '}
             <Button
               variant="text"
               size="small"
               sx={{ p: 0, minWidth: 0, textDecoration: 'underline' }}
-              onClick={() => navigate('/signup')}
+              onClick={() => navigate('/academy-signup')}
             >
               Create an account
+            </Button>
+          </Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ mt: '0.75rem', textAlign: 'center' }}>
+            Student, parent, or instructor?{' '}
+            <Button
+              variant="text"
+              size="small"
+              sx={{ p: 0, minWidth: 0, textDecoration: 'underline' }}
+              onClick={() => navigate('/user-login')}
+            >
+              Member login
             </Button>
           </Typography>
           <Typography variant="body2" color="text.secondary" sx={{ mt: '0.75rem', textAlign: 'center' }}>

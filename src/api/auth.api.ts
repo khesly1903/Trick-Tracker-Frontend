@@ -2,7 +2,7 @@ import axiosInstance from './axiosInstance';
 import type { AuthResponse, LoginDto, RegisterDto } from './types';
 
 export const login = (data: LoginDto): Promise<AuthResponse> =>
-  axiosInstance.post('/auth/login', data).then((r) => r.data);
+  axiosInstance.post('/auth/login', data, { _skipAuthRedirect: true } as any).then((r) => r.data);
 
 export const register = (data: RegisterDto): Promise<AuthResponse> =>
   axiosInstance.post('/auth/register', data).then((r) => r.data);

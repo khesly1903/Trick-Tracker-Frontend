@@ -12,8 +12,9 @@ import {
   Checkbox,
   FormControlLabel,
   FormGroup,
+  IconButton,
 } from "@mui/material";
-import { Trash2 } from "lucide-react";
+import { Trash2, Lock, LockOpen } from "lucide-react";
 import { MuiTelInput } from "mui-tel-input";
 import {
   createInstructor,
@@ -32,7 +33,6 @@ const InstructorDialog = ({
     name: "",
     surname: "",
     email: "",
-    password: "",
     phoneNumber: "",
     secondaryPhoneNumber: "",
     whatsappPhoneNumber: "",
@@ -41,6 +41,8 @@ const InstructorDialog = ({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [whatsappType, setWhatsappType] = useState("");
+  const [enrollmentIdLocked, setEnrollmentIdLocked] = useState(true);
+  const [enrollmentId, setEnrollmentId] = useState("");
 
   const isEditMode = !!instructor;
 
@@ -50,7 +52,6 @@ const InstructorDialog = ({
         name: instructor.name || "",
         surname: instructor.surname || "",
         email: instructor.email || "",
-        password: "",
         phoneNumber: instructor.phoneNumber || "",
         secondaryPhoneNumber: instructor.secondaryPhoneNumber || "",
         whatsappPhoneNumber: instructor.whatsappPhoneNumber || "",
@@ -62,13 +63,14 @@ const InstructorDialog = ({
         name: "",
         surname: "",
         email: "",
-        password: "",
         phoneNumber: "",
         secondaryPhoneNumber: "",
         whatsappPhoneNumber: "",
         roles: ["INSTRUCTOR"],
       });
       setWhatsappType("");
+      setEnrollmentIdLocked(true);
+      setEnrollmentId("");
     }
   }, [instructor, open]);
 
@@ -137,12 +139,11 @@ const InstructorDialog = ({
     try {
       let result;
       if (isEditMode) {
-        const dataToUpdate = { ...formData };
-        if (!dataToUpdate.password) delete dataToUpdate.password;
-
-        result = await updateInstructor(instructor.id, dataToUpdate);
+        result = await updateInstructor(instructor.id, formData);
       } else {
-        result = await createInstructor(formData);
+        const payload = { ...formData };
+        if (!enrollmentIdLocked && enrollmentId.trim()) payload.enrollmentId = enrollmentId.trim();
+        result = await createInstructor(payload);
       }
       onInstructorSaved(result);
       onClose();
@@ -222,21 +223,30 @@ const InstructorDialog = ({
                     inputProps={{ autoComplete: "off" }}
                   />
                 </Grid>
-                <Grid item size={{ xs: 12 }} width={"100%"}>
-                  <TextField
-                    name="password"
-                    label={
-                      isEditMode
-                        ? "Change Password (Leave empty to keep)"
-                        : "Initial Password"
-                    }
-                    type="password"
-                    fullWidth
-                    // required={!isEditMode}
-                    value={formData.password}
-                    onChange={handleChange}
-                  />
-                </Grid>
+                {!isEditMode && (
+                  <Grid item size={{ xs: 12 }} width={"100%"}>
+                    <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                      <IconButton
+                        size="small"
+                        color={enrollmentIdLocked ? "primary" : "default"}
+                        onClick={() => setEnrollmentIdLocked((p) => { if (!p) setEnrollmentId(""); return !p; })}
+                      >
+                        {enrollmentIdLocked ? <Lock size={18} /> : <LockOpen size={18} />}
+                      </IconButton>
+                      <TextField
+                        label="Academy ID"
+                        size="small"
+                        disabled={enrollmentIdLocked}
+                        value={enrollmentId}
+                        onChange={(e) => setEnrollmentId(e.target.value.replace(/\D/g, ""))}
+                        placeholder={enrollmentIdLocked ? "Auto-generated" : "Enter academy ID"}
+                        helperText={enrollmentIdLocked ? "ID will be auto-generated. To use an existing academy ID, unlock via button." : "Enter your academy ID"}
+                        slotProps={{ htmlInput: { inputMode: "numeric" } }}
+                        sx={{ flex: 1 }}
+                      />
+                    </Box>
+                  </Grid>
+                )}
                 <Grid item size={{ xs: 12 }}>
                   <MuiTelInput
                     label="Primary Phone Number"

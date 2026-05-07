@@ -27,7 +27,7 @@ import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import dayjs from "dayjs";
-import { Trash2, Plus, X } from "lucide-react";
+import { Trash2, Plus, X, Lock, LockOpen } from "lucide-react";
 import { MuiTelInput } from "mui-tel-input";
 import {
   createStudentWithContacts,
@@ -206,6 +206,8 @@ const StudentDialog = ({
   const [s1Injuries, setS1Injuries] = useState([]);
   const [s1Email, setS1Email] = useState("");
   const [s1Errors, setS1Errors] = useState({});
+  const [s1EnrollmentIdLocked, setS1EnrollmentIdLocked] = useState(true);
+  const [s1EnrollmentId, setS1EnrollmentId] = useState("");
 
   // Step 2 — phones
   const [s2PhoneNumber, setS2PhoneNumber] = useState("");
@@ -289,6 +291,8 @@ const StudentDialog = ({
       setS2ContactSearchResults([]);
       setS2SelectedContacts([]);
       setNewContacts([]);
+      setS1EnrollmentIdLocked(true);
+      setS1EnrollmentId("");
     }
   }, [open, student]);
 
@@ -400,6 +404,7 @@ const StudentDialog = ({
         phoneNumber: s2PhoneNumber || undefined,
         secondaryPhoneNumber: s2SecondaryPhone || undefined,
         whatsappPhoneNumber: s2WhatsappPhone || undefined,
+        enrollmentId: !s1EnrollmentIdLocked && s1EnrollmentId.trim() ? s1EnrollmentId.trim() : undefined,
         contactIds: s2SelectedContacts.map((c) => c.id),
         newContacts: newContacts.map((c) => ({
           email: c.email || undefined,
@@ -572,6 +577,28 @@ const StudentDialog = ({
           helperText={s1Errors.email}
           slotProps={{ htmlInput: { autoComplete: "off" } }}
         />
+      </Grid>
+      <Grid item size={{ xs: 12 }}>
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+          <IconButton
+            size="small"
+            color={s1EnrollmentIdLocked ? "primary" : "default"}
+            onClick={() => setS1EnrollmentIdLocked((p) => { if (!p) setS1EnrollmentId(""); return !p; })}
+          >
+            {s1EnrollmentIdLocked ? <Lock size={18} /> : <LockOpen size={18} />}
+          </IconButton>
+          <TextField
+            label="Academy ID"
+            size="small"
+            disabled={s1EnrollmentIdLocked}
+            value={s1EnrollmentId}
+            onChange={(e) => setS1EnrollmentId(e.target.value.replace(/\D/g, ""))}
+            placeholder={s1EnrollmentIdLocked ? "Auto-generated" : "Enter academy ID"}
+            helperText={s1EnrollmentIdLocked ? "ID will be auto-generated. To use an existing academy ID, unlock via button." : "Enter your academy ID"}
+            slotProps={{ htmlInput: { inputMode: "numeric" } }}
+            sx={{ flex: 1 }}
+          />
+        </Box>
       </Grid>
       <Grid item size={{ xs: 12 }}>
         <TextField

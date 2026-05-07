@@ -5,11 +5,13 @@ import { ColorModeProvider } from './theme/ThemeContext';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import PrivateRoute from './components/PrivateRoute';
 import MainLayout from './layouts/MainLayout';
+import PortalLayout from './layouts/PortalLayout';
 
 import LandingPage from './pages/landing';
 import LoginPage from './pages/login';
 import SignupPage from './pages/signup';
 import SetupPage from './pages/setup';
+import PortalLoginPage from './pages/portal-login';
 
 import Dashboard from './pages/dashboard';
 import StudentsPage from './pages/students';
@@ -21,6 +23,13 @@ import LocationsPage from './pages/locations';
 import EnrollmentsPage from './pages/enrollments';
 import TrackerPage from './pages/tracker';
 
+import StudentPortalPage from './pages/student-portal';
+import StudentSkillsPage from './pages/student-portal/skills';
+import ParentPortalPage from './pages/parent-portal';
+import ParentStudentDetailPage from './pages/parent-portal/student-detail';
+import InstructorPortalPage from './pages/instructor-portal';
+import InstructorTrackerPage from './pages/instructor-portal/tracker';
+
 function SetupRoute({ children }: { children: ReactNode }) {
   const { isAuthenticated, isLoading, user } = useAuth();
   if (isLoading) {
@@ -30,7 +39,7 @@ function SetupRoute({ children }: { children: ReactNode }) {
       </Box>
     );
   }
-  if (!isAuthenticated) return <Navigate to="/login" replace />;
+  if (!isAuthenticated) return <Navigate to="/academy-login" replace />;
   if (user?.academyId) return <Navigate to="/dashboard" replace />;
   return <>{children}</>;
 }
@@ -43,11 +52,12 @@ function App() {
           <Routes>
             {/* Public routes */}
             <Route path="/" element={<LandingPage />} />
-            <Route path="/login" element={<LoginPage />} />
-            <Route path="/signup" element={<SignupPage />} />
+            <Route path="/academy-login" element={<LoginPage />} />
+            <Route path="/user-login" element={<PortalLoginPage />} />
+            <Route path="/academy-signup" element={<SignupPage />} />
             <Route path="/setup" element={<SetupRoute><SetupPage /></SetupRoute>} />
 
-            {/* Private routes */}
+            {/* Admin private routes */}
             <Route
               path="/"
               element={
@@ -66,6 +76,23 @@ function App() {
               <Route path="tracker" element={<TrackerPage />} />
               <Route path="locations" element={<LocationsPage />} />
               <Route path="management" element={<div>Management Page Placeholder</div>} />
+            </Route>
+
+            {/* Portal routes (student / parent / instructor) */}
+            <Route
+              path="/"
+              element={
+                <PrivateRoute>
+                  <PortalLayout />
+                </PrivateRoute>
+              }
+            >
+              <Route path="student" element={<StudentPortalPage />} />
+              <Route path="student/skills" element={<StudentSkillsPage />} />
+              <Route path="parent" element={<ParentPortalPage />} />
+              <Route path="parent/students/:studentId" element={<ParentStudentDetailPage />} />
+              <Route path="instructor" element={<InstructorPortalPage />} />
+              <Route path="instructor/tracker" element={<InstructorTrackerPage />} />
             </Route>
 
             <Route path="*" element={<Navigate to="/" replace />} />

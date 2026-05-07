@@ -11,9 +11,19 @@ import {
   Alert,
 } from "@mui/material";
 import { Trash2 } from "lucide-react";
-import { createLocation, updateLocation, softDeleteLocation } from "../../api/locations.api";
+import {
+  createLocation,
+  updateLocation,
+  softDeleteLocation,
+} from "../../api/locations.api";
 
-const LocationDialog = ({ open, onClose, onLocationSaved, onLocationDeleted, location = null }) => {
+const LocationDialog = ({
+  open,
+  onClose,
+  onLocationSaved,
+  onLocationDeleted,
+  location = null,
+}) => {
   const [formData, setFormData] = useState({
     name: "",
     address: "",
@@ -61,7 +71,8 @@ const LocationDialog = ({ open, onClose, onLocationSaved, onLocationDeleted, loc
       console.error("Failed to save location:", err);
       const backendMessage = err.response?.data?.message;
       setError(
-        backendMessage || `An error occurred while ${isEditMode ? 'updating' : 'creating'} the location.`
+        backendMessage ||
+          `An error occurred while ${isEditMode ? "updating" : "creating"} the location.`,
       );
     } finally {
       setLoading(false);
@@ -69,8 +80,9 @@ const LocationDialog = ({ open, onClose, onLocationSaved, onLocationDeleted, loc
   };
 
   const handleDelete = async () => {
-    if (!window.confirm("Are you sure you want to delete this location?")) return;
-    
+    if (!window.confirm("Are you sure you want to delete this location?"))
+      return;
+
     setLoading(true);
     try {
       await softDeleteLocation(location.id);
@@ -97,11 +109,10 @@ const LocationDialog = ({ open, onClose, onLocationSaved, onLocationDeleted, loc
             </Alert>
           )}
           <Grid container spacing={2}>
-            <Grid item size={{xs:12}}>
+            <Grid item size={{ xs: 12 }}>
               <TextField
                 name="name"
                 label="Location Name"
-                variant="filled"
                 fullWidth
                 required
                 value={formData.name}
@@ -109,11 +120,10 @@ const LocationDialog = ({ open, onClose, onLocationSaved, onLocationDeleted, loc
                 placeholder="e.g. Central Gymnastics Center"
               />
             </Grid>
-            <Grid item  size={{xs:12}}>
+            <Grid item size={{ xs: 12 }}>
               <TextField
                 name="address"
                 label="Address"
-                variant="standard"
                 fullWidth
                 required
                 multiline
@@ -125,11 +135,17 @@ const LocationDialog = ({ open, onClose, onLocationSaved, onLocationDeleted, loc
             </Grid>
           </Grid>
         </DialogContent>
-        <DialogActions sx={{ p: 2, px: 3, justifyContent: isEditMode ? 'space-between' : 'flex-end' }}>
+        <DialogActions
+          sx={{
+            p: 2,
+            px: 3,
+            justifyContent: isEditMode ? "space-between" : "flex-end",
+          }}
+        >
           {isEditMode && (
-            <Button 
-              color="error" 
-              startIcon={<Trash2 size={18} />} 
+            <Button
+              color="error"
+              startIcon={<Trash2 size={18} />}
               onClick={handleDelete}
               disabled={loading}
               variant="outlined"
@@ -142,7 +158,11 @@ const LocationDialog = ({ open, onClose, onLocationSaved, onLocationDeleted, loc
               Cancel
             </Button>
             <Button type="submit" variant="contained" disabled={loading}>
-              {loading ? "Saving..." : (isEditMode ? "Save Changes" : "Add Location")}
+              {loading
+                ? "Saving..."
+                : isEditMode
+                  ? "Save Changes"
+                  : "Add Location"}
             </Button>
           </Box>
         </DialogActions>

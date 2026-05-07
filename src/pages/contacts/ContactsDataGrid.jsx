@@ -48,11 +48,10 @@ export const ContactsDataGrid = ({ refreshTrigger, onSeeDetails, onEdit }) => {
       ),
     },
     {
-      field: "id",
-      headerName: "ID",
-      width: 100,
-      valueGetter: (value) =>
-        value ? `TT-C-${value.substring(0, 4).toUpperCase()}` : "",
+      field: "enrollmentId",
+      headerName: "Academy ID",
+      width: 120,
+      valueGetter: (value) => value || "—",
     },
     {
       field: "fullName",

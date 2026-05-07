@@ -44,12 +44,12 @@ axiosInstance.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config;
 
-    if (error.response?.status === 401 && !originalRequest._retry) {
+    if (error.response?.status === 401 && !originalRequest._retry && !originalRequest._skipAuthRedirect) {
       const refreshToken = getStoredRefreshToken();
       if (!refreshToken) {
         localStorage.removeItem('tt_access_token');
         localStorage.removeItem('tt_refresh_token');
-        window.location.href = '/login';
+        window.location.href = '/academy-login';
         return Promise.reject(error);
       }
 
@@ -83,7 +83,7 @@ axiosInstance.interceptors.response.use(
         processQueue(refreshError, null);
         localStorage.removeItem('tt_access_token');
         localStorage.removeItem('tt_refresh_token');
-        window.location.href = '/login';
+        window.location.href = '/academy-login';
         return Promise.reject(refreshError);
       } finally {
         isRefreshing = false;

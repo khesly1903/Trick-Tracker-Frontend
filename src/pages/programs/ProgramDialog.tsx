@@ -124,6 +124,7 @@ interface SchedEditForm {
   type: SessionType | '';
   startTime: Dayjs | null;
   endTime: Dayjs | null;
+  duration?: number;
 }
 
 // ─── SchedForm helper (shared by edit + add) ──────────────────────────────────

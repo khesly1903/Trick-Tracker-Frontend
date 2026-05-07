@@ -34,11 +34,6 @@ const formatDisplayTime = (isoString: string): string => {
   return d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
 };
 
-// getDay() returns 0=Sun,1=Mon,...,6=Sat → convert to Mon-based index
-const dateToDayIdx = (isoString: string): number => {
-  const d = new Date(isoString);
-  return (d.getDay() + 6) % 7;
-};
 
 const WeeklySchedule: React.FC = () => {
   const theme = useTheme();

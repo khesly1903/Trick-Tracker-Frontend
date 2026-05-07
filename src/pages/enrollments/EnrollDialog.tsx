@@ -60,7 +60,7 @@ const EnrollDialog: React.FC<Props> = ({ open, onClose, onEnrolled }) => {
     setLoading(true);
     setError(null);
     try {
-      await enrollStudent({ studentId: selectedStudent.id, programLocationId: selectedLocation.id });
+      await enrollStudent({ studentId: selectedStudent.id!, programLocationId: selectedLocation.id });
       onEnrolled();
       handleClose();
     } catch (err: any) {

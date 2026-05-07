@@ -2,6 +2,8 @@ import { Box, Button, Container, Typography, Stack, Chip } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import SportsGymnasticsIcon from '@mui/icons-material/SportsGymnastics';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
+import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
+import BadgeIcon from '@mui/icons-material/Badge';
 
 const features = [
   'Track student skill progression in real time',
@@ -43,10 +45,13 @@ export default function LandingPage() {
           </Typography>
         </Stack>
         <Stack direction="row" spacing={1.5}>
-          <Button variant="outlined" onClick={() => navigate('/login')}>
-            Log In
+          <Button variant="outlined" startIcon={<BadgeIcon />} onClick={() => navigate('/user-login')}>
+            Member Login
           </Button>
-          <Button variant="contained" onClick={() => navigate('/signup')}>
+          <Button variant="outlined" startIcon={<AdminPanelSettingsIcon />} onClick={() => navigate('/academy-login')}>
+            Admin Login
+          </Button>
+          <Button variant="contained" onClick={() => navigate('/academy-signup')}>
             Sign Up
           </Button>
         </Stack>
@@ -62,12 +67,12 @@ export default function LandingPage() {
           <Typography variant="body1" color="text.secondary" sx={{ mb: '2.5rem', maxWidth: '36rem', mx: 'auto' }}>
             TrickTracker helps academy admins manage students, instructors, programs, and skill progression — all in one place.
           </Typography>
-          <Stack direction="row" spacing={2} justifyContent="center" sx={{ mb: '4rem' }}>
-            <Button variant="contained" size="large" onClick={() => navigate('/signup')}>
-              Get Started
+          <Stack direction="row" spacing={2} justifyContent="center" flexWrap="wrap" sx={{ mb: '4rem', gap: 1 }}>
+            <Button variant="contained" size="large" onClick={() => navigate('/academy-signup')}>
+              Get Started — Academy Admin
             </Button>
-            <Button variant="outlined" size="large" onClick={() => navigate('/login')}>
-              Log In
+            <Button variant="outlined" size="large" startIcon={<BadgeIcon />} onClick={() => navigate('/user-login')}>
+              Member Portal
             </Button>
           </Stack>
 

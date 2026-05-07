@@ -7,8 +7,8 @@ interface AuthContextValue {
   user: AuthUser | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  login: (data: LoginDto) => Promise<void>;
-  register: (data: RegisterDto) => Promise<void>;
+  login: (data: LoginDto) => Promise<AuthUser>;
+  register: (data: RegisterDto) => Promise<AuthUser>;
   logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
 }
@@ -53,16 +53,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       .finally(() => setIsLoading(false));
   }, []);
 
-  const login = useCallback(async (data: LoginDto) => {
+  const login = useCallback(async (data: LoginDto): Promise<AuthUser> => {
     const res = await authApi.login(data);
     storeTokens(res.accessToken, res.refreshToken);
     setUser(res.user);
+    return res.user;
   }, []);
 
-  const register = useCallback(async (data: RegisterDto) => {
+  const register = useCallback(async (data: RegisterDto): Promise<AuthUser> => {
     const res = await authApi.register(data);
     storeTokens(res.accessToken, res.refreshToken);
     setUser(res.user);
+    return res.user;
   }, []);
 
   const logout = useCallback(async () => {

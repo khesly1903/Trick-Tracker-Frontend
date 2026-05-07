@@ -14,8 +14,9 @@ import {
   FormGroup,
   MenuItem,
   Typography,
+  IconButton,
 } from "@mui/material";
-import { Trash2 } from "lucide-react";
+import { Trash2, Lock, LockOpen } from "lucide-react";
 import { MuiTelInput } from "mui-tel-input";
 import {
   createContact,
@@ -43,6 +44,8 @@ const ContactDialog = ({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [whatsappType, setWhatsappType] = useState("");
+  const [enrollmentIdLocked, setEnrollmentIdLocked] = useState(true);
+  const [enrollmentId, setEnrollmentId] = useState("");
 
   const isEditMode = !!contact;
 
@@ -71,6 +74,8 @@ const ContactDialog = ({
         type: "PARENT",
       });
       setWhatsappType("");
+      setEnrollmentIdLocked(true);
+      setEnrollmentId("");
     }
   }, [contact, open]);
 
@@ -138,10 +143,17 @@ const ContactDialog = ({
 
     try {
       let result;
+      const toPayload = (data) => ({
+        ...data,
+        type: Array.isArray(data.type) ? data.type : [data.type].filter(Boolean),
+      });
+
       if (isEditMode) {
-        result = await updateContact(contact.id, formData);
+        result = await updateContact(contact.id, toPayload(formData));
       } else {
-        result = await createContact(formData);
+        const payload = toPayload(formData);
+        if (!enrollmentIdLocked && enrollmentId.trim()) payload.enrollmentId = enrollmentId.trim();
+        result = await createContact(payload);
       }
       onContactSaved(result);
       onClose();
@@ -222,6 +234,31 @@ const ContactDialog = ({
                 />
               </Grid>
               
+              {!isEditMode && (
+                <Grid item size={{ xs: 12 }}>
+                  <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                    <IconButton
+                      size="small"
+                      color={enrollmentIdLocked ? "primary" : "default"}
+                      onClick={() => setEnrollmentIdLocked((p) => { if (!p) setEnrollmentId(""); return !p; })}
+                    >
+                      {enrollmentIdLocked ? <Lock size={18} /> : <LockOpen size={18} />}
+                    </IconButton>
+                    <TextField
+                      label="Academy ID"
+                      size="small"
+                      disabled={enrollmentIdLocked}
+                      value={enrollmentId}
+                      onChange={(e) => setEnrollmentId(e.target.value.replace(/\D/g, ""))}
+                      placeholder={enrollmentIdLocked ? "Auto-generated" : "Enter academy ID"}
+                      helperText={enrollmentIdLocked ? "ID will be auto-generated. To use an existing academy ID, unlock via button." : "Enter your academy ID"}
+                      slotProps={{ htmlInput: { inputMode: "numeric" } }}
+                      sx={{ flex: 1 }}
+                    />
+                  </Box>
+                </Grid>
+              )}
+
               <Grid item size={{ xs: 12 }}>
                 <TextField
                   select
@@ -234,7 +271,7 @@ const ContactDialog = ({
                 >
                   <MenuItem value="PARENT">Parent</MenuItem>
                   <MenuItem value="GUARDIAN">Guardian</MenuItem>
-                  <MenuItem value="OTHER">Other</MenuItem>
+                  <MenuItem value="EMERGENCY">Emergency</MenuItem>
                 </TextField>
               </Grid>
 

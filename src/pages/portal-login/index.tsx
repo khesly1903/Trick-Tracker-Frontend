@@ -8,30 +8,28 @@ import {
   Alert,
   IconButton,
   InputAdornment,
-  Divider,
 } from '@mui/material';
 import SportsGymnasticsIcon from '@mui/icons-material/SportsGymnastics';
 import Visibility from '@mui/icons-material/Visibility';
 import VisibilityOff from '@mui/icons-material/VisibilityOff';
-import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
-import GroupIcon from '@mui/icons-material/Group';
-import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
+import PeopleIcon from '@mui/icons-material/People';
+import SchoolIcon from '@mui/icons-material/School';
+import FitnessCenterIcon from '@mui/icons-material/FitnessCenter';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 
-const adminCapabilities = [
-  { icon: <AdminPanelSettingsIcon fontSize="small" />, text: 'Full control over academy settings' },
-  { icon: <GroupIcon fontSize="small" />, text: 'Create and manage students, instructors & contacts' },
-  { icon: <CalendarMonthIcon fontSize="small" />, text: 'Set up programs, schedules, and locations' },
+const roleInfo = [
+  { icon: <SchoolIcon sx={{ opacity: 0.9, fontSize: '1.1rem' }} />, label: 'Students — view your enrolled programs and skill progress' },
+  { icon: <PeopleIcon sx={{ opacity: 0.9, fontSize: '1.1rem' }} />, label: 'Parents — track your child\'s programs and achievements' },
+  { icon: <FitnessCenterIcon sx={{ opacity: 0.9, fontSize: '1.1rem' }} />, label: 'Instructors — manage skill progress for your classes' },
 ];
 
-export default function SignupPage() {
+export default function PortalLoginPage() {
   const navigate = useNavigate();
-  const { register } = useAuth();
+  const { login } = useAuth();
 
-  const [email, setEmail] = useState('');
+  const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -39,23 +37,15 @@ export default function SignupPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
-
-    if (password !== confirmPassword) {
-      setError('Passwords do not match.');
-      return;
-    }
-    if (password.length < 6) {
-      setError('Password must be at least 6 characters.');
-      return;
-    }
-
     setLoading(true);
     try {
-      await register({ email, password });
-      navigate('/setup');
+      const user = await login({ identifier, password });
+      if (user.roles.includes('STUDENT')) navigate('/student');
+      else if (user.roles.includes('PARENT')) navigate('/parent');
+      else if (user.roles.includes('INSTRUCTOR')) navigate('/instructor');
+      else navigate('/dashboard');
     } catch (err: any) {
-      const msg = err?.response?.data?.message;
-      setError(Array.isArray(msg) ? msg.join(', ') : msg || 'Registration failed. Please try again.');
+      setError(err?.response?.data?.message || 'Invalid Academy ID or password.');
     } finally {
       setLoading(false);
     }
@@ -70,8 +60,8 @@ export default function SignupPage() {
           flexDirection: 'column',
           justifyContent: 'center',
           width: '50%',
-          bgcolor: 'primary.main',
-          color: 'primary.contrastText',
+          bgcolor: 'secondary.main',
+          color: 'secondary.contrastText',
           p: '4rem',
         }}
       >
@@ -82,36 +72,21 @@ export default function SignupPage() {
           </Typography>
         </Stack>
         <Typography variant="h2" sx={{ mb: '1rem', lineHeight: 1.2 }}>
-          Academy Admin Sign Up
+          Student & Member Login
         </Typography>
-        <Typography variant="body1" sx={{ mb: '2.5rem', opacity: 0.85 }}>
-          This page is for academy administrators only. As an admin, you'll have full control over your academy's operations.
+        <Typography variant="body1" sx={{ mb: '3rem', opacity: 0.85 }}>
+          For students, parents, and instructors. Log in with your Academy ID — provided by your academy admin.
         </Typography>
-        <Stack spacing={2} sx={{ mb: '3rem' }}>
-          {adminCapabilities.map((c) => (
-            <Stack key={c.text} direction="row" alignItems="center" spacing={1.5}>
-              <Box sx={{ opacity: 0.9 }}>{c.icon}</Box>
+        <Stack spacing={1.5}>
+          {roleInfo.map((item) => (
+            <Stack key={item.label} direction="row" alignItems="center" spacing={1.5}>
+              {item.icon}
               <Typography variant="body1" sx={{ opacity: 0.9 }}>
-                {c.text}
+                {item.label}
               </Typography>
             </Stack>
           ))}
         </Stack>
-
-        <Divider sx={{ borderColor: 'rgba(255,255,255,0.2)', mb: '2rem' }} />
-
-        <Box>
-          <Typography variant="body2" sx={{ opacity: 0.8, mb: '1rem' }}>
-            Are you a student, instructor, or parent? Your account is created by your academy admin — no sign-up needed.
-          </Typography>
-          <Button
-            variant="outlined"
-            sx={{ borderColor: 'rgba(255,255,255,0.5)', color: 'inherit' }}
-            onClick={() => navigate('/academy-login')}
-          >
-            Go to Login
-          </Button>
-        </Box>
       </Box>
 
       {/* Right panel */}
@@ -127,7 +102,6 @@ export default function SignupPage() {
         }}
       >
         <Box sx={{ width: '100%', maxWidth: '22rem' }}>
-          {/* Mobile logo */}
           <Stack
             direction="row"
             alignItems="center"
@@ -141,10 +115,10 @@ export default function SignupPage() {
           </Stack>
 
           <Typography variant="h3" sx={{ mb: '0.5rem' }}>
-            Create Account
+            Member Login
           </Typography>
           <Typography variant="body2" color="text.secondary" sx={{ mb: '2rem' }}>
-            Register your academy admin account.
+            For students, parents, and instructors. Enter your Academy ID and password.
           </Typography>
 
           {error && (
@@ -156,14 +130,16 @@ export default function SignupPage() {
           <Box component="form" onSubmit={handleSubmit}>
             <Stack spacing={2}>
               <TextField
-                label="Email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                label="Academy ID"
+                type="text"
+                placeholder="e.g. 26001001"
+                value={identifier}
+                onChange={(e) => setIdentifier(e.target.value)}
                 required
                 fullWidth
-                autoComplete="email"
+                autoComplete="username"
                 autoFocus
+                helperText="Your unique Academy ID (e.g. 26001001)"
               />
               <TextField
                 label="Password"
@@ -172,8 +148,7 @@ export default function SignupPage() {
                 onChange={(e) => setPassword(e.target.value)}
                 required
                 fullWidth
-                autoComplete="new-password"
-                helperText="Minimum 6 characters"
+                autoComplete="current-password"
                 InputProps={{
                   endAdornment: (
                     <InputAdornment position="end">
@@ -184,15 +159,6 @@ export default function SignupPage() {
                   ),
                 }}
               />
-              <TextField
-                label="Confirm Password"
-                type={showPassword ? 'text' : 'password'}
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                required
-                fullWidth
-                autoComplete="new-password"
-              />
               <Button
                 type="submit"
                 variant="contained"
@@ -200,33 +166,32 @@ export default function SignupPage() {
                 size="large"
                 disabled={loading}
               >
-                {loading ? 'Creating account…' : 'Create Account'}
+                {loading ? 'Signing in…' : 'Sign In'}
               </Button>
             </Stack>
           </Box>
 
           <Typography variant="body2" color="text.secondary" sx={{ mt: '2rem', textAlign: 'center' }}>
-            Already have an account?{' '}
+            Academy admin?{' '}
             <Button
               variant="text"
               size="small"
               sx={{ p: 0, minWidth: 0, textDecoration: 'underline' }}
               onClick={() => navigate('/academy-login')}
             >
-              Log In
+              Admin login
             </Button>
           </Typography>
-
-          {/* Mobile: student/instructor notice */}
-          <Box sx={{ display: { xs: 'block', md: 'none' }, mt: '2rem' }}>
-            <Divider sx={{ mb: '1.5rem' }} />
-            <Typography variant="body2" color="text.secondary" sx={{ mb: '1rem' }}>
-              Student, instructor, or parent? Your account is created by your academy admin.
-            </Typography>
-            <Button variant="outlined" fullWidth onClick={() => navigate('/login')}>
-              Go to Login
+          <Typography variant="body2" color="text.secondary" sx={{ mt: '0.75rem', textAlign: 'center' }}>
+            <Button
+              variant="text"
+              size="small"
+              sx={{ p: 0, minWidth: 0, textDecoration: 'underline' }}
+              onClick={() => navigate('/')}
+            >
+              Back to home
             </Button>
-          </Box>
+          </Typography>
         </Box>
       </Box>
     </Box>
