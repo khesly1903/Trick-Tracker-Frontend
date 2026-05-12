@@ -61,17 +61,23 @@ export const ContactsDataGrid = ({ refreshTrigger, onSeeDetails, onEdit }) => {
       valueGetter: (value, row) => `${row.name || ""} ${row.surname || ""}`,
     },
     {
-      field: "type",
-      headerName: "Type",
-      width: 120,
-      renderCell: (params) => (
-        <Chip
-          label={params.value}
-          size="small"
-          color="secondary"
-          variant="outlined"
-        />
-      ),
+      field: "studentContacts",
+      headerName: "Students",
+      width: 100,
+      align: "center",
+      headerAlign: "center",
+      sortable: false,
+      renderCell: (params) => {
+        const count = params.value?.length ?? 0;
+        return (
+          <Chip
+            label={count}
+            size="small"
+            color={count > 0 ? "primary" : "default"}
+            variant={count > 0 ? "filled" : "outlined"}
+          />
+        );
+      },
     },
     {
       field: "email",

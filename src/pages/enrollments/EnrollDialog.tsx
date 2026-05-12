@@ -72,7 +72,7 @@ const EnrollDialog: React.FC<Props> = ({ open, onClose, onEnrolled }) => {
   };
 
   const locationLabel = (loc: ProgramLocation) =>
-    loc.location ? `${loc.location.name} — capacity ${loc.capacity}` : loc.id;
+    loc.location ? loc.location.name : loc.id;
 
   return (
     <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>

@@ -116,8 +116,7 @@ const ClassDialog: React.FC<ClassDialogProps> = ({ open, onClose, onSaved, class
             >
               <MenuItem value="GROUP">Group</MenuItem>
               <MenuItem value="PRIVATE">Private</MenuItem>
-              <MenuItem value="MAKEUP">Makeup</MenuItem>
-              <MenuItem value="WORKSHOP">Workshop</MenuItem>
+<MenuItem value="WORKSHOP">Workshop</MenuItem>
               <MenuItem value="EVENT">Event</MenuItem>
             </TextField>
 

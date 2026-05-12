@@ -148,7 +148,7 @@ const ProgramDetail = ({ open, programId, onClose }) => {
                       )}
                     </Box>
                     <Typography variant="caption" color="text.secondary">
-                      ${pl.price} · Cap: {pl.capacity}
+                      ${pl.price} · Cap: {pl._count?.studentPrograms ?? 0}/{pl.capacity}
                       {pl.instructor ? ` · ${pl.instructor.name} ${pl.instructor.surname}` : ''}
                     </Typography>
 

@@ -137,12 +137,19 @@ const InstructorDialog = ({
     setError(null);
 
     try {
+      const trimPhones = (d) => ({
+        ...d,
+        phoneNumber: d.phoneNumber?.replace(/\s/g, '') || '',
+        secondaryPhoneNumber: d.secondaryPhoneNumber?.replace(/\s/g, '') || '',
+        whatsappPhoneNumber: d.whatsappPhoneNumber?.replace(/\s/g, '') || '',
+      });
       let result;
       if (isEditMode) {
-        result = await updateInstructor(instructor.id, formData);
+        result = await updateInstructor(instructor.id, trimPhones(formData));
       } else {
-        const payload = { ...formData };
-        if (!enrollmentIdLocked && enrollmentId.trim()) payload.enrollmentId = enrollmentId.trim();
+        const payload = trimPhones({ ...formData });
+        if (!enrollmentIdLocked && enrollmentId.trim())
+          payload.enrollmentId = enrollmentId.trim();
         result = await createInstructor(payload);
       }
       onInstructorSaved(result);
@@ -151,7 +158,8 @@ const InstructorDialog = ({
       console.error("Failed to save instructor:", err);
       const backendMessage = err.response?.data?.message;
       setError(
-        backendMessage || `An error occurred while ${isEditMode ? "updating" : "creating"} the instructor. Please try again.`
+        backendMessage ||
+          `An error occurred while ${isEditMode ? "updating" : "creating"} the instructor. Please try again.`,
       );
     } finally {
       setLoading(false);
@@ -176,7 +184,7 @@ const InstructorDialog = ({
   };
 
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
+    <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
       <DialogTitle fontWeight="bold">
         {isEditMode ? "Instructor Details" : "Add New Instructor"}
       </DialogTitle>
@@ -191,7 +199,7 @@ const InstructorDialog = ({
 
             <Grid item xs={4}>
               <Grid container spacing={2}>
-                <Grid item size={{ xs: 12 }} width={"100%"}>
+                <Grid item size={{ xs: 12, sm: 6 }}>
                   <TextField
                     name="name"
                     label="First Name"
@@ -201,7 +209,7 @@ const InstructorDialog = ({
                     onChange={handleChange}
                   />
                 </Grid>
-                <Grid item size={{ xs: 12 }} width={"100%"}>
+                <Grid item size={{ xs: 12, sm: 6 }}>
                   <TextField
                     name="surname"
                     label="Last Name"
@@ -226,24 +234,42 @@ const InstructorDialog = ({
                 {!isEditMode && (
                   <Grid item size={{ xs: 12 }} width={"100%"}>
                     <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                      <IconButton
-                        size="small"
-                        color={enrollmentIdLocked ? "primary" : "default"}
-                        onClick={() => setEnrollmentIdLocked((p) => { if (!p) setEnrollmentId(""); return !p; })}
-                      >
-                        {enrollmentIdLocked ? <Lock size={18} /> : <LockOpen size={18} />}
-                      </IconButton>
                       <TextField
                         label="Academy ID"
-                        size="small"
                         disabled={enrollmentIdLocked}
                         value={enrollmentId}
-                        onChange={(e) => setEnrollmentId(e.target.value.replace(/\D/g, ""))}
-                        placeholder={enrollmentIdLocked ? "Auto-generated" : "Enter academy ID"}
-                        helperText={enrollmentIdLocked ? "ID will be auto-generated. To use an existing academy ID, unlock via button." : "Enter your academy ID"}
+                        onChange={(e) =>
+                          setEnrollmentId(e.target.value.replace(/\D/g, ""))
+                        }
+                        placeholder={
+                          enrollmentIdLocked
+                            ? "Auto-generated"
+                            : "Enter academy ID"
+                        }
+                        helperText={
+                          enrollmentIdLocked
+                            ? "ID will be auto-generated. To use an existing academy ID, unlock via button."
+                            : "Enter your academy ID"
+                        }
                         slotProps={{ htmlInput: { inputMode: "numeric" } }}
                         sx={{ flex: 1 }}
                       />
+                      <IconButton
+                        size="small"
+                        color={enrollmentIdLocked ? "primary" : "default"}
+                        onClick={() =>
+                          setEnrollmentIdLocked((p) => {
+                            if (!p) setEnrollmentId("");
+                            return !p;
+                          })
+                        }
+                      >
+                        {enrollmentIdLocked ? (
+                          <Lock size={18} />
+                        ) : (
+                          <LockOpen size={18} />
+                        )}
+                      </IconButton>
                     </Box>
                   </Grid>
                 )}

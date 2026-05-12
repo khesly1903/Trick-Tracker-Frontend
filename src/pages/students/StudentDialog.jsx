@@ -36,7 +36,7 @@ import {
 } from "../../api/students.api";
 import { filterContacts } from "../../api/contacts.api";
 
-const STEPS = ["Student Info", "Contact & Guardian"];
+const STEPS = ["Student Info", "Contact"];
 
 const emptyContact = () => ({
   email: "",
@@ -45,28 +45,37 @@ const emptyContact = () => ({
   phoneNumber: "",
   whatsappPhoneNumber: "",
   secondaryPhoneNumber: "",
-  type: ["PARENT"],
   relation: "PARENT",
 });
 
 // ── Inline new-contact sub-form ──
 const ContactSubForm = ({ contact, index, onChange, onRemove }) => {
-  const toggleType = (t, checked) => {
-    const next = checked
-      ? [...contact.type, t]
-      : contact.type.filter((x) => x !== t);
-    onChange(index, { type: next.length ? next : ["PARENT"] });
+  const [waType, setWaType] = useState("");
+
+  const handlePhoneChange = (field, v) => {
+    const patch = { [field]: v };
+    if (field === "phoneNumber" && waType === "primary")
+      patch.whatsappPhoneNumber = v;
+    if (field === "secondaryPhoneNumber" && waType === "secondary")
+      patch.whatsappPhoneNumber = v;
+    if (field === "whatsappPhoneNumber") setWaType("");
+    onChange(index, patch);
+  };
+
+  const handleWaType = (type) => {
+    if (waType === type) {
+      setWaType("");
+    } else {
+      setWaType(type);
+      const src =
+        type === "primary" ? contact.phoneNumber : contact.secondaryPhoneNumber;
+      onChange(index, { whatsappPhoneNumber: src });
+    }
   };
 
   return (
     <Box
-      sx={{
-        border: 1,
-        borderColor: "divider",
-        borderRadius: 1,
-        p: 2,
-        mb: 2,
-      }}
+      sx={{ border: 1, borderColor: "divider", borderRadius: 1, p: 2, mb: 2 }}
     >
       <Box
         sx={{
@@ -103,7 +112,7 @@ const ContactSubForm = ({ contact, index, onChange, onRemove }) => {
             fullWidth
           />
         </Grid>
-        <Grid item size={{ xs: 12, sm: 6 }}>
+        <Grid item size={{ xs: 12 }}>
           <TextField
             label="Email"
             value={contact.email}
@@ -116,7 +125,16 @@ const ContactSubForm = ({ contact, index, onChange, onRemove }) => {
             label="Primary Phone"
             required
             value={contact.phoneNumber}
-            onChange={(v) => onChange(index, { phoneNumber: v })}
+            onChange={(v) => handlePhoneChange("phoneNumber", v)}
+            defaultCountry="EG"
+            fullWidth
+          />
+        </Grid>
+        <Grid item size={{ xs: 12 }}>
+          <MuiTelInput
+            label="Secondary Phone"
+            value={contact.secondaryPhoneNumber}
+            onChange={(v) => handlePhoneChange("secondaryPhoneNumber", v)}
             defaultCountry="EG"
             fullWidth
           />
@@ -126,46 +144,42 @@ const ContactSubForm = ({ contact, index, onChange, onRemove }) => {
             label="WhatsApp Phone"
             required
             value={contact.whatsappPhoneNumber}
-            onChange={(v) => onChange(index, { whatsappPhoneNumber: v })}
+            onChange={(v) => handlePhoneChange("whatsappPhoneNumber", v)}
             defaultCountry="EG"
             fullWidth
           />
-        </Grid>
-        <Grid item size={{ xs: 12 }}>
-          <MuiTelInput
-            label="Secondary Phone"
-            value={contact.secondaryPhoneNumber}
-            onChange={(v) => onChange(index, { secondaryPhoneNumber: v })}
-            defaultCountry="EG"
-            fullWidth
-          />
-        </Grid>
-      </Grid>
-
-      <Box sx={{ mt: 2 }}>
-        <Typography variant="body2" color="text.secondary" gutterBottom>
-          Contact Type
-        </Typography>
-        <FormGroup row>
-          {["PARENT", "GUARDIAN", "EMERGENCY"].map((t) => (
+          <FormGroup row sx={{ mt: 1, ml: 1 }}>
             <FormControlLabel
-              key={t}
               control={
                 <Checkbox
                   size="small"
-                  checked={contact.type.includes(t)}
-                  onChange={(e) => toggleType(t, e.target.checked)}
+                  checked={waType === "primary"}
+                  onChange={() => handleWaType("primary")}
                 />
               }
               label={
                 <Box component="span" sx={{ fontSize: "0.85rem" }}>
-                  {t}
+                  Same as Primary
                 </Box>
               }
             />
-          ))}
-        </FormGroup>
-      </Box>
+            <FormControlLabel
+              control={
+                <Checkbox
+                  size="small"
+                  checked={waType === "secondary"}
+                  onChange={() => handleWaType("secondary")}
+                />
+              }
+              label={
+                <Box component="span" sx={{ fontSize: "0.85rem" }}>
+                  Same as Secondary
+                </Box>
+              }
+            />
+          </FormGroup>
+        </Grid>
+      </Grid>
 
       <TextField
         select
@@ -174,7 +188,6 @@ const ContactSubForm = ({ contact, index, onChange, onRemove }) => {
         onChange={(e) => onChange(index, { relation: e.target.value })}
         fullWidth
         sx={{ mt: 1.5 }}
-        size="small"
       >
         <MenuItem value="PARENT">Parent</MenuItem>
         <MenuItem value="GUARDIAN">Guardian</MenuItem>
@@ -401,19 +414,21 @@ const StudentDialog = ({
         email: s1Email.trim(),
         school: s1School.trim() || undefined,
         injuries: s1Injuries.length ? s1Injuries : undefined,
-        phoneNumber: s2PhoneNumber || undefined,
-        secondaryPhoneNumber: s2SecondaryPhone || undefined,
-        whatsappPhoneNumber: s2WhatsappPhone || undefined,
-        enrollmentId: !s1EnrollmentIdLocked && s1EnrollmentId.trim() ? s1EnrollmentId.trim() : undefined,
+        phoneNumber: s2PhoneNumber?.replace(/\s/g, '') || undefined,
+        secondaryPhoneNumber: s2SecondaryPhone?.replace(/\s/g, '') || undefined,
+        whatsappPhoneNumber: s2WhatsappPhone?.replace(/\s/g, '') || undefined,
+        enrollmentId:
+          !s1EnrollmentIdLocked && s1EnrollmentId.trim()
+            ? s1EnrollmentId.trim()
+            : undefined,
         contactIds: s2SelectedContacts.map((c) => c.id),
         newContacts: newContacts.map((c) => ({
           email: c.email || undefined,
           name: c.name || undefined,
           surname: c.surname || undefined,
-          phoneNumber: c.phoneNumber || undefined,
-          whatsappPhoneNumber: c.whatsappPhoneNumber || undefined,
-          secondaryPhoneNumber: c.secondaryPhoneNumber || undefined,
-          type: c.type,
+          phoneNumber: c.phoneNumber?.replace(/\s/g, '') || undefined,
+          whatsappPhoneNumber: c.whatsappPhoneNumber?.replace(/\s/g, '') || undefined,
+          secondaryPhoneNumber: c.secondaryPhoneNumber?.replace(/\s/g, '') || undefined,
           relation: c.relation,
         })),
       };
@@ -476,6 +491,9 @@ const StudentDialog = ({
     try {
       const dataToSubmit = {
         ...editData,
+        phoneNumber: editData.phoneNumber?.replace(/\s/g, '') || undefined,
+        secondaryPhoneNumber: editData.secondaryPhoneNumber?.replace(/\s/g, '') || undefined,
+        whatsappPhoneNumber: editData.whatsappPhoneNumber?.replace(/\s/g, '') || undefined,
         dob: editData.dob ? editData.dob.format("YYYY-MM-DD") : null,
         injuries: editData.injuries
           ? editData.injuries.split("\n").filter((i) => i.trim() !== "")
@@ -494,7 +512,8 @@ const StudentDialog = ({
   };
 
   const handleDelete = async () => {
-    if (!window.confirm("Are you sure you want to delete this student?")) return;
+    if (!window.confirm("Are you sure you want to delete this student?"))
+      return;
     setLoading(true);
     try {
       await softDeleteStudent(student.id);
@@ -554,6 +573,7 @@ const StudentDialog = ({
             label="Date of Birth"
             value={s1Dob}
             onChange={setS1Dob}
+            maxDate={dayjs()}
             slotProps={{
               textField: {
                 fullWidth: true,
@@ -580,24 +600,36 @@ const StudentDialog = ({
       </Grid>
       <Grid item size={{ xs: 12 }}>
         <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-          <IconButton
-            size="small"
-            color={s1EnrollmentIdLocked ? "primary" : "default"}
-            onClick={() => setS1EnrollmentIdLocked((p) => { if (!p) setS1EnrollmentId(""); return !p; })}
-          >
-            {s1EnrollmentIdLocked ? <Lock size={18} /> : <LockOpen size={18} />}
-          </IconButton>
           <TextField
             label="Academy ID"
-            size="small"
             disabled={s1EnrollmentIdLocked}
             value={s1EnrollmentId}
-            onChange={(e) => setS1EnrollmentId(e.target.value.replace(/\D/g, ""))}
-            placeholder={s1EnrollmentIdLocked ? "Auto-generated" : "Enter academy ID"}
-            helperText={s1EnrollmentIdLocked ? "ID will be auto-generated. To use an existing academy ID, unlock via button." : "Enter your academy ID"}
+            onChange={(e) =>
+              setS1EnrollmentId(e.target.value.replace(/\D/g, ""))
+            }
+            placeholder={
+              s1EnrollmentIdLocked ? "Auto-generated" : "Enter academy ID"
+            }
+            helperText={
+              s1EnrollmentIdLocked
+                ? "ID will be auto-generated. To use an existing academy ID, unlock via button."
+                : "Enter your academy ID"
+            }
             slotProps={{ htmlInput: { inputMode: "numeric" } }}
             sx={{ flex: 1 }}
           />
+          <IconButton
+            size="small"
+            color={s1EnrollmentIdLocked ? "primary" : "default"}
+            onClick={() =>
+              setS1EnrollmentIdLocked((p) => {
+                if (!p) setS1EnrollmentId("");
+                return !p;
+              })
+            }
+          >
+            {s1EnrollmentIdLocked ? <Lock size={25} /> : <LockOpen size={18} />}
+          </IconButton>
         </Box>
       </Grid>
       <Grid item size={{ xs: 12 }}>
@@ -617,7 +649,12 @@ const StudentDialog = ({
           onChange={(_, val) => setS1Injuries(val)}
           renderTags={(value, getTagProps) =>
             value.map((opt, i) => (
-              <Chip label={opt} size="small" {...getTagProps({ index: i })} key={i} />
+              <Chip
+                label={opt}
+                size="small"
+                {...getTagProps({ index: i })}
+                key={i}
+              />
             ))
           }
           renderInput={(params) => (
@@ -635,12 +672,18 @@ const StudentDialog = ({
 
   const renderStep2 = () => (
     <Box>
-      <Typography variant="subtitle1" fontWeight="bold" color="primary" gutterBottom>
-        Phone Numbers
+      <Typography
+        variant="subtitle1"
+        fontWeight="bold"
+        color="primary"
+        gutterBottom
+      >
+        Personal Phone Numbers
       </Typography>
       {s1Type === "CHILD" && (
         <Alert severity="info" sx={{ mb: 2 }}>
-          For child students, phone fields are optional — use the contact section below for parent communication.
+          For child students, phone fields are optional — use the contact
+          section below for parent communication.
         </Alert>
       )}
       <Grid container spacing={2} sx={{ mb: 3 }}>
@@ -705,8 +748,13 @@ const StudentDialog = ({
 
       <Divider sx={{ mb: 2.5 }} />
 
-      <Typography variant="subtitle1" fontWeight="bold" color="primary" gutterBottom>
-        Parent / Guardian Contacts
+      <Typography
+        variant="subtitle1"
+        fontWeight="bold"
+        color="primary"
+        gutterBottom
+      >
+        Parent & Emergency Contact
       </Typography>
 
       {/* Search existing contacts */}
@@ -714,7 +762,9 @@ const StudentDialog = ({
         multiple
         options={s2ContactSearchResults}
         getOptionLabel={(opt) =>
-          typeof opt === "string" ? opt : `${opt.name || ""} ${opt.surname || ""}`.trim()
+          typeof opt === "string"
+            ? opt
+            : `${opt.name || ""} ${opt.surname || ""}`.trim()
         }
         filterOptions={(x) => x}
         loading={s2SearchingContacts}
@@ -749,13 +799,21 @@ const StudentDialog = ({
       <Divider sx={{ mb: 2 }} />
 
       {/* New inline contacts */}
-      <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 1 }}>
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          mb: 1,
+        }}
+      >
         <Box>
           <Typography variant="body2" fontWeight="bold">
             Add a new contact
           </Typography>
           <Typography variant="caption" color="text.secondary">
-            If the contact is not in the system yet, fill in their details below.
+            If the contact is not in the system yet, fill in their details
+            below.
           </Typography>
         </Box>
         <Button
@@ -769,17 +827,19 @@ const StudentDialog = ({
         </Button>
       </Box>
 
-      {newContacts.length > 0 && <Box sx={{ mt: 2 }}>
-        {newContacts.map((c, i) => (
-          <ContactSubForm
-            key={i}
-            contact={c}
-            index={i}
-            onChange={handleContactChange}
-            onRemove={handleContactRemove}
-          />
-        ))}
-      </Box>}
+      {newContacts.length > 0 && (
+        <Box sx={{ mt: 2 }}>
+          {newContacts.map((c, i) => (
+            <ContactSubForm
+              key={i}
+              contact={c}
+              index={i}
+              onChange={handleContactChange}
+              onRemove={handleContactRemove}
+            />
+          ))}
+        </Box>
+      )}
     </Box>
   );
 
@@ -787,11 +847,16 @@ const StudentDialog = ({
     <Box component="form" onSubmit={handleEditSubmit} autoComplete="off">
       <Grid container spacing={3}>
         <Grid item size={{ xs: 12, md: 6 }}>
-          <Typography variant="subtitle1" fontWeight="bold" gutterBottom color="primary">
+          <Typography
+            variant="subtitle1"
+            fontWeight="bold"
+            gutterBottom
+            color="primary"
+          >
             Personal Information
           </Typography>
           <Grid container spacing={2}>
-            <Grid item size={{ xs: 12 }}>
+            <Grid item size={{ xs: 12, sm: 6 }}>
               <TextField
                 name="name"
                 label="First Name"
@@ -801,7 +866,7 @@ const StudentDialog = ({
                 onChange={handleEditChange}
               />
             </Grid>
-            <Grid item size={{ xs: 12 }}>
+            <Grid item size={{ xs: 12, sm: 6 }}>
               <TextField
                 name="surname"
                 label="Last Name"
@@ -842,6 +907,7 @@ const StudentDialog = ({
                   label="Date of Birth"
                   value={editData.dob}
                   onChange={(v) => setEditData((p) => ({ ...p, dob: v }))}
+                  maxDate={dayjs()}
                   slotProps={{ textField: { fullWidth: true, required: true } }}
                 />
               </LocalizationProvider>
@@ -871,17 +937,28 @@ const StudentDialog = ({
         </Grid>
 
         <Grid item size={{ xs: 12, md: 6 }}>
-          <Typography variant="subtitle1" fontWeight="bold" gutterBottom color="primary">
+          <Typography
+            variant="subtitle1"
+            fontWeight="bold"
+            gutterBottom
+            color="primary"
+          >
             Contact Information
           </Typography>
           {editData.type === "CHILD" && (
             <Alert severity="info" sx={{ mb: 2 }}>
-              For child students, phone fields should be left blank. Assign a parent contact instead.
+              For child students, phone fields should be left blank. Assign a
+              parent contact instead.
             </Alert>
           )}
           <Grid container spacing={2}>
             <Grid item size={{ xs: 12 }}>
-              <Typography variant="body2" fontWeight="bold" color="text.secondary" gutterBottom>
+              <Typography
+                variant="body2"
+                fontWeight="bold"
+                color="text.secondary"
+                gutterBottom
+              >
                 Assign Parent / Guardian
               </Typography>
               <Autocomplete
@@ -940,7 +1017,9 @@ const StudentDialog = ({
                 fullWidth
                 defaultCountry="EG"
                 value={editData.secondaryPhoneNumber}
-                onChange={(v) => handleEditPhoneChange("secondaryPhoneNumber", v)}
+                onChange={(v) =>
+                  handleEditPhoneChange("secondaryPhoneNumber", v)
+                }
               />
             </Grid>
             <Grid item size={{ xs: 12 }}>
@@ -949,7 +1028,9 @@ const StudentDialog = ({
                 fullWidth
                 defaultCountry="EG"
                 value={editData.whatsappPhoneNumber}
-                onChange={(v) => handleEditPhoneChange("whatsappPhoneNumber", v)}
+                onChange={(v) =>
+                  handleEditPhoneChange("whatsappPhoneNumber", v)
+                }
               />
               <FormGroup row sx={{ mt: 0.5, ml: 1 }}>
                 <FormControlLabel
@@ -1020,7 +1101,10 @@ const StudentDialog = ({
       </DialogContent>
 
       <DialogActions
-        sx={{ p: 2.5, justifyContent: isEditMode ? "space-between" : "flex-end" }}
+        sx={{
+          p: 2.5,
+          justifyContent: isEditMode ? "space-between" : "flex-end",
+        }}
       >
         {isEditMode ? (
           <>
@@ -1036,7 +1120,11 @@ const StudentDialog = ({
               <Button onClick={onClose} disabled={loading} sx={{ mr: 1 }}>
                 Cancel
               </Button>
-              <Button variant="contained" disabled={loading} onClick={handleEditSubmit}>
+              <Button
+                variant="contained"
+                disabled={loading}
+                onClick={handleEditSubmit}
+              >
                 {loading ? "Saving..." : "Save Changes"}
               </Button>
             </Box>
@@ -1056,7 +1144,11 @@ const StudentDialog = ({
                 Next →
               </Button>
             ) : (
-              <Button variant="contained" onClick={handleCreateSubmit} disabled={loading}>
+              <Button
+                variant="contained"
+                onClick={handleCreateSubmit}
+                disabled={loading}
+              >
                 {loading ? "Saving..." : "Save"}
               </Button>
             )}

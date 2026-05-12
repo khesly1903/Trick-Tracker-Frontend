@@ -172,8 +172,9 @@ export interface Class {
 export interface ProgramSchedule {
   id: UUID;
   programLocationId: UUID;
-  dayOfWeek: DayOfWeek;
-  startTime: string;
+  dayOfWeek?: DayOfWeek;
+  date?: string;
+  startTime?: string;
   endTime?: string;
   duration: number;
   type: SessionType;
@@ -191,7 +192,8 @@ export interface ProgramLocation {
   instructor?: Instructor;
   backupInstructors?: Instructor[];
   schedules?: ProgramSchedule[];
-  _count?: { sessions: number };
+  program?: Program;
+  _count?: { sessions: number; studentPrograms: number };
 }
 
 export interface Program {
@@ -288,6 +290,14 @@ export interface AttendanceEntry {
   note?: string;
 }
 
+export interface SessionAttendanceEntry {
+  studentProgramId: UUID;
+  studentName: string;
+  attended: boolean;
+  note: string;
+  isMarked: boolean;
+}
+
 // ────────── Request DTOs ──────────
 export interface CreateUserDto {
   email: string;
@@ -305,7 +315,6 @@ export interface NewContactInStudentDto {
   phoneNumber?: string;
   whatsappPhoneNumber?: string;
   secondaryPhoneNumber?: string;
-  type?: ContactType[];
   relation?: ContactRelation;
 }
 
@@ -352,7 +361,6 @@ export interface CreateContactDto {
   secondaryPhoneNumber?: string;
   whatsappPhoneNumber?: string;
   roles?: Role[];
-  type: string;
   enrollmentId?: string;
 }
 
@@ -403,11 +411,12 @@ export interface CreateProgramLocationDto {
 
 export interface CreateProgramScheduleDto {
   programLocationId: UUID;
-  dayOfWeek: DayOfWeek;
-  startTime: string;
+  type: SessionType;
+  dayOfWeek?: DayOfWeek;
+  date?: string;
+  startTime?: string;
   endTime?: string;
   duration: number;
-  type: SessionType;
 }
 
 export interface CreateSessionDto {
@@ -432,8 +441,8 @@ export interface EnrollStudentDto {
 }
 
 export interface BulkAttendanceDto {
-  sessionId: UUID;
-  records: AttendanceRecord[];
+  programSessionId: UUID;
+  attendances: AttendanceRecord[];
 }
 
 export interface GetEnrollmentsParams {

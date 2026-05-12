@@ -39,6 +39,7 @@ export const EnrollmentsDataGrid = ({ refreshTrigger, onDeleted }) => {
   }, [refreshTrigger]);
 
   const handleSoftDisenroll = async (row) => {
+    if (!window.confirm("Are you sure you want to disenroll this student?")) return;
     try {
       await softDisenroll(row.id);
       onDeleted();

@@ -22,6 +22,7 @@ import ProgramsPage from './pages/programs';
 import LocationsPage from './pages/locations';
 import EnrollmentsPage from './pages/enrollments';
 import TrackerPage from './pages/tracker';
+import AttendancePage from './pages/attendance';
 
 import StudentPortalPage from './pages/student-portal';
 import StudentSkillsPage from './pages/student-portal/skills';
@@ -74,6 +75,7 @@ function App() {
               <Route path="programs" element={<ProgramsPage />} />
               <Route path="enrollments" element={<EnrollmentsPage />} />
               <Route path="tracker" element={<TrackerPage />} />
+              <Route path="attendance" element={<AttendancePage />} />
               <Route path="locations" element={<LocationsPage />} />
               <Route path="management" element={<div>Management Page Placeholder</div>} />
             </Route>

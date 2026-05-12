@@ -13,8 +13,8 @@ import { Calendar, MapPin, Users, Building2 } from 'lucide-react';
 import { getAllPrograms } from '../../api/programs.api';
 import { getAllProgramLocations } from '../../api/programLocations.api';
 import type { Program, ProgramLocation, Location } from '../../api/types';
-import TrackerDialog from './TrackerDialog';
-import LocationTrackerDialog from './LocationTrackerDialog';
+import ProgramAttendanceDialog from './ProgramAttendanceDialog';
+import LocationAttendanceDialog from './LocationAttendanceDialog';
 import dayjs from 'dayjs';
 
 type ViewMode = 'program' | 'location';
@@ -24,14 +24,33 @@ interface LocationGroup {
   programLocations: ProgramLocation[];
 }
 
-const TrackerPage: React.FC = () => {
+const cardSx = {
+  height: '100%',
+  display: 'flex',
+  flexDirection: 'column',
+  borderRadius: '0.5rem',
+  border: '1px solid',
+  borderColor: 'divider',
+  cursor: 'pointer',
+  background: (theme: any) =>
+    theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.03)' : 'white',
+  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+  '&:hover': {
+    transform: 'translateY(-6px)',
+    boxShadow: (theme: any) =>
+      theme.palette.mode === 'dark'
+        ? '0 20px 40px -12px rgba(0,0,0,0.5)'
+        : '0 20px 40px -12px rgba(0,0,0,0.1)',
+    borderColor: 'primary.main',
+  },
+};
+
+const AttendancePage: React.FC = () => {
   const [viewMode, setViewMode] = useState<ViewMode>('program');
 
-  // By Program
   const [programs, setPrograms] = useState<Program[]>([]);
   const [selectedProgram, setSelectedProgram] = useState<Program | null>(null);
 
-  // By Location
   const [locationGroups, setLocationGroups] = useState<LocationGroup[]>([]);
   const [selectedGroup, setSelectedGroup] = useState<LocationGroup | null>(null);
 
@@ -42,13 +61,13 @@ const TrackerPage: React.FC = () => {
     if (viewMode === 'program') {
       setLoading(true);
       getAllPrograms()
-        .then((data: Program[]) => setPrograms(data.filter((p: Program) => p.isActive)))
+        .then((data) => setPrograms(data.filter((p) => p.isActive)))
         .catch(() => setError('Failed to load programs.'))
         .finally(() => setLoading(false));
     } else {
       setLoading(true);
       getAllProgramLocations()
-        .then((pls: ProgramLocation[]) => {
+        .then((pls) => {
           const map = new Map<string, LocationGroup>();
           for (const pl of pls) {
             if (!pl.location) continue;
@@ -63,37 +82,17 @@ const TrackerPage: React.FC = () => {
     }
   }, [viewMode]);
 
-  const cardSx = {
-    height: '100%',
-    display: 'flex',
-    flexDirection: 'column',
-    borderRadius: '0.5rem',
-    border: '1px solid',
-    borderColor: 'divider',
-    cursor: 'pointer',
-    background: (theme: any) =>
-      theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.03)' : 'white',
-    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-    '&:hover': {
-      transform: 'translateY(-6px)',
-      boxShadow: (theme: any) =>
-        theme.palette.mode === 'dark'
-          ? '0 20px 40px -12px rgba(0,0,0,0.5)'
-          : '0 20px 40px -12px rgba(0,0,0,0.1)',
-      borderColor: 'primary.main',
-    },
-  };
-
   return (
     <Box>
       <Typography variant="h4" sx={{ fontWeight: 900, mb: 0.5, letterSpacing: '-0.02em' }}>
-        Tracker
+        Attendance
       </Typography>
       <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-        {viewMode === 'program' ? 'Select a program to track student skills' : 'Select a location to browse programs'}
+        {viewMode === 'program'
+          ? 'Select a program to take attendance'
+          : 'Select a location to browse programs'}
       </Typography>
 
-      {/* View toggle */}
       <Box sx={{ display: 'flex', gap: 1, mb: 3 }}>
         <Chip
           label="By Program"
@@ -184,7 +183,6 @@ const TrackerPage: React.FC = () => {
             <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }} key={group.location.id}>
               <Card onClick={() => setSelectedGroup(group)} sx={cardSx}>
                 <CardContent sx={{ flexGrow: 1, p: 3 }}>
-                  {/* Icon badge */}
                   <Box
                     sx={{
                       width: 44,
@@ -242,13 +240,13 @@ const TrackerPage: React.FC = () => {
         </Grid>
       )}
 
-      <TrackerDialog
+      <ProgramAttendanceDialog
         open={!!selectedProgram}
         onClose={() => setSelectedProgram(null)}
         program={selectedProgram}
       />
 
-      <LocationTrackerDialog
+      <LocationAttendanceDialog
         open={!!selectedGroup}
         onClose={() => setSelectedGroup(null)}
         location={selectedGroup?.location ?? null}
@@ -258,4 +256,4 @@ const TrackerPage: React.FC = () => {
   );
 };
 
-export default TrackerPage;
+export default AttendancePage;

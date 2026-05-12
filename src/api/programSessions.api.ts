@@ -37,3 +37,12 @@ export const bulkDeleteSessions = (ids: UUID[]): Promise<void> =>
   api
     .delete('/program-sessions/bulk', { data: { ids } })
     .then((r) => r.data);
+
+export const getSessionsByProgramLocation = (
+  programLocationId: UUID,
+  dateFrom: string,
+  dateTo: string,
+): Promise<ProgramSession[]> =>
+  api
+    .get('/program-sessions', { params: { programLocationId, dateFrom, dateTo } })
+    .then((r) => r.data);

@@ -1,7 +1,23 @@
-import { Box, Button, Container, Typography, Stack, Chip } from '@mui/material';
+import {
+  Box,
+  Button,
+  Container,
+  Typography,
+  Stack,
+  Chip,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Paper,
+} from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import SportsGymnasticsIcon from '@mui/icons-material/SportsGymnastics';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
+import CheckIcon from '@mui/icons-material/Check';
+import CloseIcon from '@mui/icons-material/Close';
 import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
 import BadgeIcon from '@mui/icons-material/Badge';
 
@@ -11,6 +27,38 @@ const features = [
   'Assign instructors to program locations',
   'Monitor attendance across all sessions',
   'Enroll students and track contacts',
+];
+
+type PlanKey = 'basic' | 'advanced' | 'accountment' | 'pro';
+
+interface PlanFeature {
+  label: string;
+  basic: boolean;
+  advanced: boolean;
+  accountment: boolean;
+  pro: boolean;
+}
+
+const planFeatures: PlanFeature[] = [
+  { label: 'Student enrollment & contact tracking', basic: true,  advanced: true,  accountment: true,  pro: true  },
+  { label: 'Class & program management',            basic: true,  advanced: true,  accountment: true,  pro: true  },
+  { label: 'Instructor assignment',                 basic: true,  advanced: true,  accountment: true,  pro: true  },
+  { label: 'Attendance tracking',                   basic: true,  advanced: true,  accountment: true,  pro: true  },
+  { label: 'Scheduling & session management',       basic: true,  advanced: true,  accountment: true,  pro: true  },
+  { label: 'Basic skill / trick tracking',          basic: true,  advanced: true,  accountment: true,  pro: true  },
+  { label: 'Academy-custom skill tree system',      basic: false, advanced: true,  accountment: false, pro: true  },
+  { label: 'Tree graph visualization',              basic: false, advanced: true,  accountment: false, pro: true  },
+  { label: 'Advanced progression analytics',        basic: false, advanced: true,  accountment: false, pro: true  },
+  { label: 'Financial management',                  basic: false, advanced: false, accountment: true,  pro: true  },
+  { label: 'Payment tracking',                      basic: false, advanced: false, accountment: true,  pro: true  },
+  { label: 'Rent & plan billing',                   basic: false, advanced: false, accountment: true,  pro: true  },
+];
+
+const plans: { key: PlanKey; label: string; sub: string }[] = [
+  { key: 'basic',       label: 'Basic',       sub: 'Core operations'               },
+  { key: 'advanced',    label: 'Advanced',    sub: '+ Custom skill tracking'        },
+  { key: 'accountment', label: 'Accountment', sub: '+ Financial management'         },
+  { key: 'pro',         label: 'Pro',         sub: 'Advanced + Accountment'         },
 ];
 
 export default function LandingPage() {
@@ -98,14 +146,58 @@ export default function LandingPage() {
             </Stack>
           </Box>
 
-          {/* Pricing placeholder */}
-          <Box sx={{ mt: '3rem' }}>
-            <Typography variant="h5" sx={{ mb: '1.5rem' }}>
-              Pricing
+          {/* Plans table */}
+          <Box sx={{ mt: '4rem' }}>
+            <Typography variant="h5" sx={{ mb: '0.5rem' }}>
+              Plans
             </Typography>
-            <Typography variant="body1" color="text.secondary">
-              Contact us for pricing information tailored to your academy size.
+            <Typography variant="body2" color="text.secondary" sx={{ mb: '2rem' }}>
+              Contact us for pricing tailored to your academy.
             </Typography>
+            <TableContainer component={Paper} sx={{ borderRadius: '0.75rem', overflow: 'hidden' }}>
+              <Table>
+                <TableHead>
+                  <TableRow sx={{ bgcolor: 'primary.main' }}>
+                    <TableCell sx={{ color: 'primary.contrastText', fontWeight: 700, width: '34%' }}>
+                      Feature
+                    </TableCell>
+                    {plans.map((p) => (
+                      <TableCell
+                        key={p.key}
+                        align="center"
+                        sx={{ color: 'primary.contrastText', fontWeight: 700 }}
+                      >
+                        <Typography variant="body1" fontWeight={700} lineHeight={1.2}>
+                          {p.label}
+                        </Typography>
+                        <Typography variant="caption" sx={{ opacity: 0.8 }}>
+                          {p.sub}
+                        </Typography>
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {planFeatures.map((row, i) => (
+                    <TableRow
+                      key={row.label}
+                      sx={{ bgcolor: i % 2 === 0 ? 'background.paper' : 'action.hover' }}
+                    >
+                      <TableCell sx={{ fontWeight: 500 }}>{row.label}</TableCell>
+                      {plans.map((p) => (
+                        <TableCell key={p.key} align="center">
+                          {row[p.key] ? (
+                            <CheckIcon color="success" fontSize="small" />
+                          ) : (
+                            <CloseIcon color="disabled" fontSize="small" />
+                          )}
+                        </TableCell>
+                      ))}
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
           </Box>
         </Box>
       </Container>

@@ -45,7 +45,7 @@ export default function SetupPage() {
     setLoading(true);
 
     try {
-      await setupAcademy({ name, description: description || undefined, phone: phone || undefined, address: address || undefined });
+      await setupAcademy({ name, description: description || undefined, phone: phone?.replace(/\s/g, '') || undefined, address: address || undefined });
 
       const refreshToken = getStoredRefreshToken();
       if (refreshToken) {

@@ -5,19 +5,58 @@ import {
   DialogContent,
   DialogActions,
   Button,
-  Grid,
   Box,
   Avatar,
   Typography,
-  List,
-  ListItem,
-  ListItemText,
   Divider,
   Chip,
   CircularProgress,
+  Paper,
 } from "@mui/material";
-import { BookOpen, Phone, Mail, User, Calendar, School, AlertTriangle, Users } from "lucide-react";
+import {
+  Phone,
+  Mail,
+  User,
+  Calendar,
+  School,
+  AlertTriangle,
+  Users,
+  GraduationCap,
+  MapPin,
+} from "lucide-react";
 import { getStudentById } from "../../api/students.api";
+
+const InfoRow = ({ icon, label, value }) => (
+  <Box sx={{ display: "flex", alignItems: "flex-start", gap: 1.5, mb: 1.5 }}>
+    <Box sx={{ color: "text.secondary", mt: 0.25, flexShrink: 0 }}>{icon}</Box>
+    <Box>
+      <Typography variant="caption" color="text.secondary" display="block">
+        {label}
+      </Typography>
+      <Typography variant="body2">{value || "—"}</Typography>
+    </Box>
+  </Box>
+);
+
+const SectionHeader = ({ icon, label, color }) => (
+  <Box sx={{ mb: 1.5 }}>
+    <Typography
+      variant="subtitle2"
+      fontWeight={700}
+      sx={{ display: "flex", alignItems: "center", gap: 1, color: color || "text.primary", mb: 0.75 }}
+    >
+      {icon}
+      {label}
+    </Typography>
+    <Divider />
+  </Box>
+);
+
+const COL_SX = {
+  flex: "0 0 33.33%",
+  p: 3,
+  overflowY: "auto",
+};
 
 const StudentDetailDialog = ({ open, onClose, student }) => {
   const [fullStudent, setFullStudent] = useState(null);
@@ -37,151 +76,128 @@ const StudentDetailDialog = ({ open, onClose, student }) => {
 
   if (!student) return null;
   const s = fullStudent || student;
-
   const contacts = fullStudent?.studentContacts || [];
+  const programs = (fullStudent?.studentPrograms || []).filter((sp) => sp.isActive);
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
-      <DialogTitle fontWeight="bold" textAlign="center">
-        Student Profile
+      <DialogTitle sx={{ pb: 1 }}>
+        <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+          <Avatar sx={{ width: 52, height: 52, bgcolor: "primary.main" }}>
+            <User size={26} />
+          </Avatar>
+          <Box>
+            <Typography variant="h6" fontWeight={700} lineHeight={1.2}>
+              {s.name} {s.surname}
+            </Typography>
+            <Box sx={{ display: "flex", gap: 0.75, mt: 0.5 }}>
+              <Chip label={s.type || "STUDENT"} size="small" color={s.type === "CHILD" ? "primary" : "secondary"} />
+              <Chip label={s.isActive ? "Active" : "Inactive"} size="small" variant="outlined" color={s.isActive ? "success" : "default"} />
+              {s.enrollmentId && <Chip label={s.enrollmentId} size="small" variant="outlined" />}
+            </Box>
+          </Box>
+        </Box>
       </DialogTitle>
-      <DialogContent dividers>
+
+      <DialogContent dividers sx={{ p: 0 }}>
         {loading ? (
-          <Box sx={{ display: "flex", justifyContent: "center", py: 6 }}>
+          <Box sx={{ display: "flex", justifyContent: "center", py: 8 }}>
             <CircularProgress />
           </Box>
         ) : (
-        <Grid container spacing={4} sx={{ justifyContent: "space-between", alignItems: "stretch" }}>
-          {/* Left Column: Profile & Info */}
-          <Grid item xs={12} md={6}>
-            <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center", mb: 3 }}>
-              <Avatar
-                sx={{
-                  width: 120,
-                  height: 120,
-                  mb: 2,
-                  bgcolor: "secondary.light",
-                  color: "secondary.contrastText",
-                  border: (theme) => `4px solid ${theme.palette.secondary.light}`,
-                  boxShadow: 3,
-                }}
-              >
-                <User size={60} />
-              </Avatar>
-              <Typography variant="h5" fontWeight="bold">
-                {s.name} {s.surname}
-              </Typography>
-              <Box sx={{ mt: 1, display: 'flex', gap: 1 }}>
-                <Chip label={s.type || "STUDENT"} size="small" color={s.type === "CHILD" ? "primary" : "secondary"} />
-                <Chip label={s.isActive ? "Active" : "Inactive"} size="small" variant="outlined" color={s.isActive ? "success" : "default"} />
-              </Box>
-            </Box>
+          <Box sx={{ display: "flex", minHeight: 400 }}>
 
-            <Box sx={{ width: "100%", p: 2 }}>
-              <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
-                <Mail size={18} style={{ marginRight: 12, color: "#666" }} />
-                <Box>
-                  <Typography variant="caption" color="text.secondary">Email Address</Typography>
-                  <Typography variant="body2">{s.email || "Not provided"}</Typography>
-                </Box>
-              </Box>
-
-              <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
-                <Phone size={18} style={{ marginRight: 12, color: "#666" }} />
-                <Box>
-                  <Typography variant="caption" color="text.secondary">Primary Phone</Typography>
-                  <Typography variant="body2">{s.phoneNumber || "Not provided"}</Typography>
-                </Box>
-              </Box>
-
-              <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
-                <Calendar size={18} style={{ marginRight: 12, color: "#666" }} />
-                <Box>
-                  <Typography variant="caption" color="text.secondary">Date of Birth</Typography>
-                  <Typography variant="body2">{s.dob ? new Date(s.dob).toLocaleDateString() : "Not provided"}</Typography>
-                </Box>
-              </Box>
-
-              <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
-                <School size={18} style={{ marginRight: 12, color: "#666" }} />
-                <Box>
-                  <Typography variant="caption" color="text.secondary">School</Typography>
-                  <Typography variant="body2">{s.school || "Not provided"}</Typography>
-                </Box>
-              </Box>
-
-              {s.whatsappPhoneNumber && (
-                <Box sx={{ display: "flex", alignItems: "center" }}>
-                  <Box sx={{ width: 18, height: 18, mr: 1.5, bgcolor: "#25D366", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", color: "white", fontSize: 10, fontWeight: "bold" }}>
-                    W
-                  </Box>
-                  <Box>
-                    <Typography variant="caption" color="text.secondary">WhatsApp</Typography>
-                    <Typography variant="body2">{s.whatsappPhoneNumber}</Typography>
-                  </Box>
-                </Box>
+            {/* ── Col 1: Personal Info ── */}
+            <Box sx={{ ...COL_SX, borderRight: "1px solid", borderColor: "divider" }}>
+              <SectionHeader icon={<User size={15} />} label="Personal Info" />
+              <InfoRow icon={<Mail size={15} />} label="Email" value={s.email} />
+              <InfoRow icon={<Phone size={15} />} label="Phone" value={s.phoneNumber} />
+              {s.secondaryPhoneNumber && (
+                <InfoRow icon={<Phone size={15} />} label="Secondary Phone" value={s.secondaryPhoneNumber} />
               )}
+              {s.whatsappPhoneNumber && (
+                <InfoRow
+                  icon={
+                    <Box sx={{ width: 15, height: 15, bgcolor: "#25D366", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", color: "white", fontSize: 8, fontWeight: "bold" }}>
+                      W
+                    </Box>
+                  }
+                  label="WhatsApp"
+                  value={s.whatsappPhoneNumber}
+                />
+              )}
+              <InfoRow icon={<Calendar size={15} />} label="Date of Birth" value={s.dob ? new Date(s.dob).toLocaleDateString() : null} />
+              <InfoRow icon={<School size={15} />} label="School" value={s.school} />
             </Box>
-          </Grid>
 
-          {/* Right Column: Injuries & Contacts */}
-          <Grid item xs={12} md={6}>
-            <Box sx={{ mb: 4 }}>
-              <Typography variant="h6" fontWeight="bold" gutterBottom sx={{ display: "flex", alignItems: "center", color: "error.main" }}>
-                <AlertTriangle size={20} style={{ marginRight: 10 }} />
-                Health & Injuries
-              </Typography>
-              <Divider sx={{ mb: 2 }} />
+            {/* ── Col 2: Injuries + Contacts ── */}
+            <Box sx={{ ...COL_SX, borderRight: "1px solid", borderColor: "divider" }}>
+              <SectionHeader icon={<AlertTriangle size={15} />} label="Injuries" color="error.main" />
               {s.injuries && s.injuries.length > 0 ? (
-                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-                  {s.injuries.map((injury, idx) => (
-                    <Chip key={idx} label={injury} color="error" variant="outlined" size="small" />
+                <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.75, mb: 3 }}>
+                  {s.injuries.map((inj, i) => (
+                    <Chip key={i} label={inj} size="small" color="error" variant="outlined" />
                   ))}
                 </Box>
               ) : (
-                <Typography variant="body2" color="text.secondary">No injuries reported.</Typography>
+                <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+                  None reported.
+                </Typography>
               )}
-            </Box>
 
-            <Box>
-              <Typography variant="h6" fontWeight="bold" gutterBottom sx={{ display: "flex", alignItems: "center" }}>
-                <Users size={20} style={{ marginRight: 10, color: "#1976d2" }} />
-                Contacts
-              </Typography>
-              <Divider sx={{ mb: 2 }} />
+              <SectionHeader icon={<Users size={15} />} label="Contacts" />
               {contacts.length > 0 ? (
-                <List disablePadding>
+                <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
                   {contacts.map((sc) => {
                     const c = sc.contact;
                     return (
-                      <ListItem key={sc.contactId} sx={{ mb: 1.5, bgcolor: "background.paper", borderRadius: 1, border: "1px solid", borderColor: "divider", alignItems: "flex-start", px: 2, py: 1.5 }}>
-                        <ListItemText
-                          primary={
-                            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                              <Typography fontWeight="bold" variant="body2">{c.name} {c.surname}</Typography>
-                              <Chip label={sc.relation} size="small" variant="outlined" sx={{ fontSize: "0.65rem", height: 18 }} />
-                            </Box>
-                          }
-                          secondary={
-                            <Box sx={{ mt: 0.5 }}>
-                              {c.phoneNumber && <Typography variant="caption" display="block" color="text.secondary">{c.phoneNumber}</Typography>}
-                              {c.user?.email && <Typography variant="caption" display="block" color="text.secondary">{c.user.email}</Typography>}
-                            </Box>
-                          }
-                        />
-                      </ListItem>
+                      <Paper key={sc.contactId} variant="outlined" sx={{ px: 1.5, py: 1, borderRadius: 1 }}>
+                        <Box sx={{ display: "flex", alignItems: "center", gap: 0.75, mb: 0.25 }}>
+                          <Typography variant="body2" fontWeight={600}>{c.name} {c.surname}</Typography>
+                          <Chip label={sc.relation} size="small" variant="outlined" sx={{ fontSize: "0.6rem", height: 16 }} />
+                        </Box>
+                        {c.phoneNumber && <Typography variant="caption" color="text.secondary" display="block">{c.phoneNumber}</Typography>}
+                        {c.user?.email && <Typography variant="caption" color="text.secondary" display="block">{c.user.email}</Typography>}
+                      </Paper>
                     );
                   })}
-                </List>
+                </Box>
               ) : (
                 <Typography variant="body2" color="text.secondary">No contacts linked.</Typography>
               )}
             </Box>
-          </Grid>
-        </Grid>
+
+            {/* ── Col 3: Programs ── */}
+            <Box sx={{ ...COL_SX, bgcolor: "action.hover" }}>
+              <SectionHeader icon={<GraduationCap size={15} />} label="Enrolled Programs" />
+              {programs.length > 0 ? (
+                <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
+                  {programs.map((sp) => {
+                    const prog = sp.programLocation?.program;
+                    const loc = sp.programLocation?.location;
+                    return (
+                      <Paper key={sp.id} variant="outlined" sx={{ px: 2, py: 1.5, borderRadius: 1, bgcolor: "background.paper" }}>
+                        <Typography variant="body2" fontWeight={600}>{prog?.name || "—"}</Typography>
+                        {loc?.name && (
+                          <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, mt: 0.25 }}>
+                            <MapPin size={12} color="gray" />
+                            <Typography variant="caption" color="text.secondary">{loc.name}</Typography>
+                          </Box>
+                        )}
+                      </Paper>
+                    );
+                  })}
+                </Box>
+              ) : (
+                <Typography variant="body2" color="text.secondary">No active programs.</Typography>
+              )}
+            </Box>
+
+          </Box>
         )}
       </DialogContent>
-      <DialogActions sx={{ p: 2, px: 3 }}>
+
+      <DialogActions sx={{ px: 3, py: 1.5 }}>
         <Button onClick={onClose}>Close</Button>
       </DialogActions>
     </Dialog>

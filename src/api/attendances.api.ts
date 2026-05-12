@@ -1,12 +1,12 @@
 import api from './axiosInstance';
-import type { AttendanceEntry, BulkAttendanceDto, UUID } from './types';
+import type { SessionAttendanceEntry, BulkAttendanceDto, UUID } from './types';
 
 /**
- * Fetches attendance list for a specific session.
+ * Fetches attendance list for a specific session (includes student names and marked status).
  */
 export const getAttendanceListBySessionId = (
   sessionId: UUID,
-): Promise<AttendanceEntry[]> =>
+): Promise<SessionAttendanceEntry[]> =>
   api.get(`/attendances/session/${sessionId}`).then((r) => r.data);
 
 /**
@@ -14,5 +14,5 @@ export const getAttendanceListBySessionId = (
  */
 export const updateBulkAttendance = (
   data: BulkAttendanceDto,
-): Promise<AttendanceEntry[]> =>
+): Promise<SessionAttendanceEntry[]> =>
   api.post('/attendances/bulk', data).then((r) => r.data);

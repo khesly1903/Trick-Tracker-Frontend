@@ -73,6 +73,30 @@ export const ColorModeProvider: React.FC<{ children: ReactNode }> = ({ children 
             button: { textTransform: 'none', fontWeight: 600, fontSize: '0.85rem' },
           },
           components: {
+            MuiCssBaseline: {
+              styleOverrides: {
+                '*': {
+                  scrollbarWidth: 'thin',
+                  scrollbarColor: mode === 'light'
+                    ? '#C5CAE9 transparent'
+                    : '#2A3550 transparent',
+                },
+                '*::-webkit-scrollbar': {
+                  width: '6px',
+                  height: '6px',
+                },
+                '*::-webkit-scrollbar-track': {
+                  background: 'transparent',
+                },
+                '*::-webkit-scrollbar-thumb': {
+                  backgroundColor: mode === 'light' ? '#C5CAE9' : '#2A3550',
+                  borderRadius: '3px',
+                },
+                '*::-webkit-scrollbar-thumb:hover': {
+                  backgroundColor: mode === 'light' ? '#9FA8DA' : '#3D4F70',
+                },
+              },
+            },
             MuiButton: {
               styleOverrides: {
                 root: {

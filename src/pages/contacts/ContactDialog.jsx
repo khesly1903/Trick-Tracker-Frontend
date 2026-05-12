@@ -12,7 +12,6 @@ import {
   Checkbox,
   FormControlLabel,
   FormGroup,
-  MenuItem,
   Typography,
   IconButton,
 } from "@mui/material";
@@ -39,7 +38,6 @@ const ContactDialog = ({
     secondaryPhoneNumber: "",
     whatsappPhoneNumber: "",
     roles: ["PARENT"],
-    type: "PARENT",
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -59,7 +57,6 @@ const ContactDialog = ({
         secondaryPhoneNumber: contact.secondaryPhoneNumber || "",
         whatsappPhoneNumber: contact.whatsappPhoneNumber || "",
         roles: contact.roles || ["PARENT"],
-        type: contact.type || "PARENT",
       });
       setWhatsappType("");
     } else {
@@ -71,7 +68,6 @@ const ContactDialog = ({
         secondaryPhoneNumber: "",
         whatsappPhoneNumber: "",
         roles: ["PARENT"],
-        type: "PARENT",
       });
       setWhatsappType("");
       setEnrollmentIdLocked(true);
@@ -142,17 +138,19 @@ const ContactDialog = ({
     setError(null);
 
     try {
-      let result;
-      const toPayload = (data) => ({
-        ...data,
-        type: Array.isArray(data.type) ? data.type : [data.type].filter(Boolean),
+      const trimPhones = (d) => ({
+        ...d,
+        phoneNumber: d.phoneNumber?.replace(/\s/g, '') || '',
+        secondaryPhoneNumber: d.secondaryPhoneNumber?.replace(/\s/g, '') || '',
+        whatsappPhoneNumber: d.whatsappPhoneNumber?.replace(/\s/g, '') || '',
       });
-
+      let result;
       if (isEditMode) {
-        result = await updateContact(contact.id, toPayload(formData));
+        result = await updateContact(contact.id, trimPhones(formData));
       } else {
-        const payload = toPayload(formData);
-        if (!enrollmentIdLocked && enrollmentId.trim()) payload.enrollmentId = enrollmentId.trim();
+        const payload = trimPhones({ ...formData });
+        if (!enrollmentIdLocked && enrollmentId.trim())
+          payload.enrollmentId = enrollmentId.trim();
         result = await createContact(payload);
       }
       onContactSaved(result);
@@ -162,7 +160,7 @@ const ContactDialog = ({
       const backendMessage = err.response?.data?.message;
       setError(
         backendMessage ||
-          `An error occurred while ${isEditMode ? "updating" : "creating"} the contact. Please try again.`
+          `An error occurred while ${isEditMode ? "updating" : "creating"} the contact. Please try again.`,
       );
     } finally {
       setLoading(false);
@@ -187,7 +185,7 @@ const ContactDialog = ({
   };
 
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
+    <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
       <DialogTitle fontWeight="bold">
         {isEditMode ? "Contact Details" : "Add New Contact"}
       </DialogTitle>
@@ -201,7 +199,7 @@ const ContactDialog = ({
             )}
 
             <Grid container spacing={2}>
-              <Grid item size={{ xs: 12 }}>
+              <Grid item size={{ xs: 12, sm: 6 }}>
                 <TextField
                   name="name"
                   label="First Name"
@@ -211,7 +209,7 @@ const ContactDialog = ({
                   onChange={handleChange}
                 />
               </Grid>
-              <Grid item size={{ xs: 12 }}>
+              <Grid item size={{ xs: 12, sm: 6 }}>
                 <TextField
                   name="surname"
                   label="Last Name"
@@ -233,47 +231,49 @@ const ContactDialog = ({
                   inputProps={{ autoComplete: "off" }}
                 />
               </Grid>
-              
+
               {!isEditMode && (
                 <Grid item size={{ xs: 12 }}>
                   <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                    <IconButton
-                      size="small"
-                      color={enrollmentIdLocked ? "primary" : "default"}
-                      onClick={() => setEnrollmentIdLocked((p) => { if (!p) setEnrollmentId(""); return !p; })}
-                    >
-                      {enrollmentIdLocked ? <Lock size={18} /> : <LockOpen size={18} />}
-                    </IconButton>
                     <TextField
                       label="Academy ID"
-                      size="small"
                       disabled={enrollmentIdLocked}
                       value={enrollmentId}
-                      onChange={(e) => setEnrollmentId(e.target.value.replace(/\D/g, ""))}
-                      placeholder={enrollmentIdLocked ? "Auto-generated" : "Enter academy ID"}
-                      helperText={enrollmentIdLocked ? "ID will be auto-generated. To use an existing academy ID, unlock via button." : "Enter your academy ID"}
+                      onChange={(e) =>
+                        setEnrollmentId(e.target.value.replace(/\D/g, ""))
+                      }
+                      placeholder={
+                        enrollmentIdLocked
+                          ? "Auto-generated"
+                          : "Enter academy ID"
+                      }
+                      helperText={
+                        enrollmentIdLocked
+                          ? "ID will be auto-generated. To use an existing academy ID, unlock via button."
+                          : "Enter your academy ID"
+                      }
                       slotProps={{ htmlInput: { inputMode: "numeric" } }}
                       sx={{ flex: 1 }}
                     />
+                    <IconButton
+                      size="small"
+                      color={enrollmentIdLocked ? "primary" : "default"}
+                      onClick={() =>
+                        setEnrollmentIdLocked((p) => {
+                          if (!p) setEnrollmentId("");
+                          return !p;
+                        })
+                      }
+                    >
+                      {enrollmentIdLocked ? (
+                        <Lock size={18} />
+                      ) : (
+                        <LockOpen size={18} />
+                      )}
+                    </IconButton>
                   </Box>
                 </Grid>
               )}
-
-              <Grid item size={{ xs: 12 }}>
-                <TextField
-                  select
-                  name="type"
-                  label="Contact Type"
-                  fullWidth
-                  required
-                  value={formData.type}
-                  onChange={handleChange}
-                >
-                  <MenuItem value="PARENT">Parent</MenuItem>
-                  <MenuItem value="GUARDIAN">Guardian</MenuItem>
-                  <MenuItem value="EMERGENCY">Emergency</MenuItem>
-                </TextField>
-              </Grid>
 
               <Grid item size={{ xs: 12 }}>
                 <MuiTelInput

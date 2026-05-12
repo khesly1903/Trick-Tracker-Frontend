@@ -22,7 +22,7 @@ import {
   Users,
   Landmark,
   BookOpenCheck,
-  // UserCheck,
+  UserCheck,
   Settings,
   MapPin,
   ContactRound,
@@ -59,7 +59,7 @@ const MainLayout: React.FC = () => {
     { text: 'Programs', icon: <BookOpenCheck strokeWidth={1} />, path: '/programs' },
     { text: 'Enrollments', icon: <ClipboardList strokeWidth={1} />, path: '/enrollments' },
     { text: 'Tracker', icon: <Activity strokeWidth={1} />, path: '/tracker' },
-    // { text: 'Attendance', icon: <UserCheck strokeWidth={1} />, path: '/attendance' },
+    { text: 'Attendance', icon: <UserCheck strokeWidth={1} />, path: '/attendance' },
     { text: 'Locations', icon: <MapPin strokeWidth={1} />, path: '/locations' },
     { text: 'Management', icon: <Settings strokeWidth={1} />, path: '/management' },
   ];

@@ -5,10 +5,11 @@ import type { DayOfWeek, SessionType } from '../../api/types';
 
 export interface ScheduleFormRow {
   localId: string;
+  type: SessionType | '';
   dayOfWeek: DayOfWeek | '';
+  date: Dayjs | null;
   startTime: Dayjs | null;
   endTime: Dayjs | null;
-  type: SessionType | '';
 }
 
 export interface AddedSchedule {
@@ -65,8 +66,9 @@ export const makeLocalId = () => Math.random().toString(36).slice(2);
 
 export const emptyScheduleRow = (): ScheduleFormRow => ({
   localId: makeLocalId(),
+  type: 'CLASS',
   dayOfWeek: '',
+  date: null,
   startTime: null,
   endTime: null,
-  type: 'CLASS',
 });

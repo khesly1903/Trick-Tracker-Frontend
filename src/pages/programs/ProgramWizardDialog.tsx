@@ -245,6 +245,7 @@ export const StageSkillCard: React.FC<StageSkillCardProps> = ({
   };
 
   const handleDeleteSkill = async (skillId: string) => {
+    if (!window.confirm("Are you sure you want to delete this skill?")) return;
     try {
       await deleteProgramSkill(skillId);
       onDeleteSkill(stage.id, skillId);
@@ -264,7 +265,6 @@ export const StageSkillCard: React.FC<StageSkillCardProps> = ({
               label="Stage name"
               value={editStageName}
               onChange={(e) => setEditStageName(e.target.value)}
-              size="small"
               sx={{ flex: '2 1 130px' }}
               required
               autoFocus
@@ -273,7 +273,6 @@ export const StageSkillCard: React.FC<StageSkillCardProps> = ({
               label="Description (optional)"
               value={editStageDesc}
               onChange={(e) => setEditStageDesc(e.target.value)}
-              size="small"
               sx={{ flex: '3 1 180px' }}
             />
           </Box>
@@ -282,7 +281,6 @@ export const StageSkillCard: React.FC<StageSkillCardProps> = ({
               <X size={14} />
             </IconButton>
             <IconButton
-              size="small"
               color="primary"
               onClick={handleUpdateStage}
               disabled={!editStageName.trim() || stageEditSubmitting}
@@ -321,7 +319,6 @@ export const StageSkillCard: React.FC<StageSkillCardProps> = ({
                     label="Name"
                     value={editSkillName}
                     onChange={(e) => setEditSkillName(e.target.value)}
-                    size="small"
                     sx={{ flex: '2 1 120px' }}
                     autoFocus
                   />
@@ -330,7 +327,6 @@ export const StageSkillCard: React.FC<StageSkillCardProps> = ({
                     label="Type"
                     value={editSkillType}
                     onChange={(e) => setEditSkillType(e.target.value as SkillType)}
-                    size="small"
                     sx={{ flex: '0 0 90px' }}
                   >
                     <MenuItem value="SKILL">Skill</MenuItem>
@@ -340,7 +336,6 @@ export const StageSkillCard: React.FC<StageSkillCardProps> = ({
                     label="Description"
                     value={editSkillDesc}
                     onChange={(e) => setEditSkillDesc(e.target.value)}
-                    size="small"
                     sx={{ flex: '3 1 150px' }}
                   />
                   <Box sx={{ display: 'flex', gap: 0.25, alignItems: 'center' }}>
@@ -348,7 +343,6 @@ export const StageSkillCard: React.FC<StageSkillCardProps> = ({
                       <X size={13} />
                     </IconButton>
                     <IconButton
-                      size="small"
                       color="primary"
                       onClick={handleUpdateSkill}
                       disabled={!editSkillName.trim() || skillEditSubmitting}
@@ -361,7 +355,6 @@ export const StageSkillCard: React.FC<StageSkillCardProps> = ({
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, py: 0.4 }}>
                   <Chip
                     label={skill.type}
-                    size="small"
                     color={skill.type === 'TRICK' ? 'secondary' : 'primary'}
                     variant="outlined"
                     sx={{ fontSize: '0.6rem', height: '1.2rem', minWidth: '3rem' }}
@@ -405,7 +398,6 @@ export const StageSkillCard: React.FC<StageSkillCardProps> = ({
           value={skillName}
           onChange={(e) => setSkillName(e.target.value)}
           onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleAddSkill(); } }}
-          size="small"
           sx={{ flex: '2 1 130px' }}
           placeholder="e.g. Backstroke"
         />
@@ -414,7 +406,6 @@ export const StageSkillCard: React.FC<StageSkillCardProps> = ({
           label="Type"
           value={skillType}
           onChange={(e) => setSkillType(e.target.value as SkillType)}
-          size="small"
           sx={{ flex: '0 0 100px' }}
         >
           <MenuItem value="SKILL">Skill</MenuItem>
@@ -424,12 +415,10 @@ export const StageSkillCard: React.FC<StageSkillCardProps> = ({
           label="Description (optional)"
           value={skillDesc}
           onChange={(e) => setSkillDesc(e.target.value)}
-          size="small"
           sx={{ flex: '3 1 160px' }}
         />
         <Button
           variant="outlined"
-          size="small"
           startIcon={adding ? <CircularProgress size={12} /> : <Plus size={13} />}
           onClick={handleAddSkill}
           disabled={!skillName.trim() || adding}
@@ -473,7 +462,6 @@ export const LocationCard: React.FC<LocationCardProps> = ({
         </Typography>
       </Box>
       <IconButton
-        size="small"
         color="error"
         onClick={() => onDeleteLocation(loc.programLocationId)}
       >
@@ -501,7 +489,6 @@ export const LocationCard: React.FC<LocationCardProps> = ({
               {s.dayOfWeek} {s.startTime} · {s.duration}min · {s.type}
             </Typography>
             <IconButton
-              size="small"
               color="error"
               sx={{ p: 0.25 }}
               onClick={() => onDeleteSchedule(loc.programLocationId, s.scheduleId)}
@@ -558,11 +545,15 @@ export const AddLocationForm: React.FC<AddLocationFormProps> = ({
     if (capacity === '') return 'Capacity is required.';
     if (Number(capacity) < 1) return 'Capacity must be ≥ 1.';
     for (const row of scheduleRows) {
-      if (!row.dayOfWeek) return 'Day of week is required for all schedules.';
-      if (!row.startTime) return 'Start time is required for all schedules.';
-      if (!row.endTime) return 'End time is required for all schedules.';
-      if (!row.endTime.isAfter(row.startTime)) return 'End time must be after start time.';
       if (!row.type) return 'Session type is required for all schedules.';
+      if (row.type === 'CLASS') {
+        if (!row.dayOfWeek) return 'Day of week is required for CLASS schedules.';
+        if (!row.startTime) return 'Start time is required for CLASS schedules.';
+        if (!row.endTime) return 'End time is required for CLASS schedules.';
+        if (!row.endTime.isAfter(row.startTime)) return 'End time must be after start time.';
+      } else {
+        if (!row.date) return 'Date is required for non-CLASS schedules.';
+      }
     }
     return null;
   };
@@ -586,19 +577,26 @@ export const AddLocationForm: React.FC<AddLocationFormProps> = ({
 
       const createdSchedules: AddedSchedule[] = [];
       for (const row of scheduleRows) {
-        const duration = row.endTime!.diff(row.startTime!, 'minute');
+        const isClass = row.type === 'CLASS';
+        const duration = isClass ? row.endTime!.diff(row.startTime!, 'minute') : 0;
         const sched = await createProgramSchedule({
           programLocationId: loc.id,
-          dayOfWeek: row.dayOfWeek as import('../../api/types').DayOfWeek,
-          startTime: formatTime(row.startTime!),
-          endTime: formatTime(row.endTime!),
-          duration,
           type: row.type as import('../../api/types').SessionType,
+          ...(isClass
+            ? {
+                dayOfWeek: row.dayOfWeek as import('../../api/types').DayOfWeek,
+                startTime: formatTime(row.startTime!),
+                endTime: formatTime(row.endTime!),
+              }
+            : {
+                date: row.date!.toISOString(),
+              }),
+          duration,
         });
         createdSchedules.push({
           scheduleId: sched.id,
           dayOfWeek: row.dayOfWeek as import('../../api/types').DayOfWeek,
-          startTime: displayTime(sched.startTime),
+          startTime: sched.startTime ? displayTime(sched.startTime) : '',
           endTime: sched.endTime ? displayTime(sched.endTime) : undefined,
           duration: sched.duration,
           type: sched.type,
@@ -662,7 +660,6 @@ export const AddLocationForm: React.FC<AddLocationFormProps> = ({
           onChange={(e) => setLocationId(e.target.value)}
           required
           fullWidth
-          size="small"
         >
           {locations.map((l) => (
             <MenuItem key={l.id} value={l.id}>{l.name}</MenuItem>
@@ -677,7 +674,6 @@ export const AddLocationForm: React.FC<AddLocationFormProps> = ({
             onChange={(e) => setPrice(e.target.value)}
             required
             fullWidth
-            size="small"
             inputProps={{ min: 0 }}
           />
           <TextField
@@ -687,7 +683,6 @@ export const AddLocationForm: React.FC<AddLocationFormProps> = ({
             onChange={(e) => setCapacity(e.target.value)}
             required
             fullWidth
-            size="small"
             inputProps={{ min: 1 }}
           />
         </Box>
@@ -698,7 +693,6 @@ export const AddLocationForm: React.FC<AddLocationFormProps> = ({
           value={instructorId}
           onChange={(e) => setInstructorId(e.target.value)}
           fullWidth
-          size="small"
         >
           <MenuItem value=""><em>None</em></MenuItem>
           {instructors.map((i) => (
@@ -706,7 +700,7 @@ export const AddLocationForm: React.FC<AddLocationFormProps> = ({
           ))}
         </TextField>
 
-        <FormControl fullWidth size="small">
+        <FormControl fullWidth>
           <InputLabel>Backup Instructors</InputLabel>
           <Select
             multiple
@@ -730,7 +724,6 @@ export const AddLocationForm: React.FC<AddLocationFormProps> = ({
                 <MenuItem key={i.id} value={i.id}>
                   <Checkbox
                     checked={backupInstructorIds.includes(i.id)}
-                    size="small"
                   />
                   <ListItemText primary={`${i.name} ${i.surname}`} />
                 </MenuItem>
@@ -764,7 +757,6 @@ export const AddLocationForm: React.FC<AddLocationFormProps> = ({
                   </Typography>
                   {scheduleRows.length > 1 && (
                     <IconButton
-                      size="small"
                       color="error"
                       sx={{ p: 0.25 }}
                       onClick={() => removeRow(row.localId)}
@@ -777,73 +769,85 @@ export const AddLocationForm: React.FC<AddLocationFormProps> = ({
                 <Box sx={{ display: 'flex', gap: 1, mb: 1, flexWrap: 'wrap' }}>
                   <TextField
                     select
-                    label="Day"
-                    value={row.dayOfWeek}
-                    onChange={(e) =>
-                      updateRow(row.localId, {
-                        dayOfWeek: e.target.value as import('../../api/types').DayOfWeek,
-                      })
-                    }
-                    size="small"
-                    sx={{ flex: '1 1 130px' }}
-                    required
-                  >
-                    {DAY_OPTIONS.map((o) => (
-                      <MenuItem key={o.value} value={o.value}>{o.label}</MenuItem>
-                    ))}
-                  </TextField>
-
-                  <TextField
-                    select
                     label="Type"
                     value={row.type}
                     onChange={(e) =>
                       updateRow(row.localId, {
                         type: e.target.value as import('../../api/types').SessionType,
+                        dayOfWeek: '',
+                        date: null,
+                        startTime: null,
+                        endTime: null,
                       })
                     }
-                    size="small"
-                    sx={{ flex: '1 1 110px' }}
+                    sx={{ flex: '1 1 130px' }}
                     required
                   >
                     {SESSION_TYPE_OPTIONS.map((o) => (
                       <MenuItem key={o.value} value={o.value}>{o.label}</MenuItem>
                     ))}
                   </TextField>
+
+                  {row.type === 'CLASS' && (
+                    <TextField
+                      select
+                      label="Day"
+                      value={row.dayOfWeek}
+                      onChange={(e) =>
+                        updateRow(row.localId, {
+                          dayOfWeek: e.target.value as import('../../api/types').DayOfWeek,
+                        })
+                      }
+                      sx={{ flex: '1 1 130px' }}
+                      required
+                    >
+                      {DAY_OPTIONS.map((o) => (
+                        <MenuItem key={o.value} value={o.value}>{o.label}</MenuItem>
+                      ))}
+                    </TextField>
+                  )}
                 </Box>
 
-                <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-                  <TimePicker
-                    label="Start Time"
-                    value={row.startTime}
-                    onChange={(v) => updateRow(row.localId, { startTime: v })}
+                {row.type === 'CLASS' ? (
+                  <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+                    <TimePicker
+                      label="Start Time"
+                      value={row.startTime}
+                      onChange={(v) => updateRow(row.localId, { startTime: v })}
+                      slotProps={{
+                        textField: {
+                          sx: { flex: '1 1 130px' },
+                          required: true,
+                        },
+                      }}
+                    />
+                    <TimePicker
+                      label="End Time"
+                      value={row.endTime}
+                      onChange={(v) => updateRow(row.localId, { endTime: v })}
+                      slotProps={{
+                        textField: {
+                          sx: { flex: '1 1 130px' },
+                          required: true,
+                        },
+                      }}
+                    />
+                  </Box>
+                ) : row.type ? (
+                  <DatePicker
+                    label="Date"
+                    value={row.date}
+                    onChange={(v) => updateRow(row.localId, { date: v })}
                     slotProps={{
-                      textField: {
-                        size: 'small',
-                        sx: { flex: '1 1 130px' },
-                        required: true,
-                      },
+                      textField: { fullWidth: true, required: true },
                     }}
                   />
-                  <TimePicker
-                    label="End Time"
-                    value={row.endTime}
-                    onChange={(v) => updateRow(row.localId, { endTime: v })}
-                    slotProps={{
-                      textField: {
-                        size: 'small',
-                        sx: { flex: '1 1 130px' },
-                        required: true,
-                      },
-                    }}
-                  />
-                </Box>
+                ) : null}
               </Paper>
             ))}
           </LocalizationProvider>
 
           <Button
-            size="small"
             startIcon={<Plus size={14} />}
             onClick={() =>
               setScheduleRows((rows) => [...rows, emptyScheduleRow()])
@@ -860,7 +864,6 @@ export const AddLocationForm: React.FC<AddLocationFormProps> = ({
           Cancel
         </Button>
         <Button
-          size="small"
           variant="contained"
           onClick={handleSubmit}
           disabled={submitting}
@@ -1035,6 +1038,7 @@ const ProgramWizardDialog: React.FC<ProgramWizardDialogProps> = ({
 
   const handleDeleteStage = async (stageId: string) => {
     if (!programId) return;
+    if (!window.confirm("Are you sure you want to delete this stage?")) return;
     try {
       await deleteProgramStage(programId, stageId);
       setAddedStages((prev) => prev.filter((s) => s.id !== stageId));
@@ -1088,6 +1092,7 @@ const ProgramWizardDialog: React.FC<ProgramWizardDialogProps> = ({
   };
 
   const handleDeleteLocation = async (programLocationId: string) => {
+    if (!window.confirm("Are you sure you want to delete this location?")) return;
     try {
       await deleteProgramLocation(programLocationId);
       setAddedLocations((prev) =>
@@ -1102,6 +1107,7 @@ const ProgramWizardDialog: React.FC<ProgramWizardDialogProps> = ({
     programLocationId: string,
     scheduleId: string
   ) => {
+    if (!window.confirm("Are you sure you want to delete this schedule?")) return;
     try {
       await deleteProgramSchedule(scheduleId);
       setAddedLocations((prev) =>
@@ -1161,7 +1167,6 @@ const ProgramWizardDialog: React.FC<ProgramWizardDialogProps> = ({
         onChange={(e) => setForm1((f) => ({ ...f, name: e.target.value }))}
         required
         fullWidth
-        size="small"
       />
 
       <TextField
@@ -1171,7 +1176,6 @@ const ProgramWizardDialog: React.FC<ProgramWizardDialogProps> = ({
         onChange={(e) => setForm1((f) => ({ ...f, classId: e.target.value }))}
         required
         fullWidth
-        size="small"
       >
         {classes.map((c) => (
           <MenuItem key={c.id} value={c.id}>{c.name}</MenuItem>
@@ -1187,7 +1191,7 @@ const ProgramWizardDialog: React.FC<ProgramWizardDialogProps> = ({
             minDate={dayjs().subtract(1, 'year')}
             maxDate={dayjs().add(2, 'year')}
             slotProps={{
-              textField: { size: 'small', fullWidth: true, required: true },
+              textField: { fullWidth: true, required: true },
             }}
           />
           <DatePicker
@@ -1197,7 +1201,7 @@ const ProgramWizardDialog: React.FC<ProgramWizardDialogProps> = ({
             minDate={form1.startDate ? form1.startDate.add(1, 'day') : dayjs().subtract(1, 'year')}
             maxDate={dayjs().add(2, 'year')}
             slotProps={{
-              textField: { size: 'small', fullWidth: true, required: true },
+              textField: { fullWidth: true, required: true },
             }}
           />
         </Box>
@@ -1212,7 +1216,6 @@ const ProgramWizardDialog: React.FC<ProgramWizardDialogProps> = ({
         }
         required
         fullWidth
-        size="small"
       >
         {GENDER_OPTIONS.map((o) => (
           <MenuItem key={o.value} value={o.value}>{o.label}</MenuItem>
@@ -1227,7 +1230,6 @@ const ProgramWizardDialog: React.FC<ProgramWizardDialogProps> = ({
           onChange={(e) => setForm1((f) => ({ ...f, minAge: e.target.value }))}
           required
           fullWidth
-          size="small"
           inputProps={{ min: 0 }}
           error={form1.minAge !== '' && form1.maxAge !== '' && Number(form1.minAge) > Number(form1.maxAge)}
         />
@@ -1238,7 +1240,6 @@ const ProgramWizardDialog: React.FC<ProgramWizardDialogProps> = ({
           onChange={(e) => setForm1((f) => ({ ...f, maxAge: e.target.value }))}
           required
           fullWidth
-          size="small"
           inputProps={{ min: 0 }}
           error={form1.minAge !== '' && form1.maxAge !== '' && Number(form1.minAge) > Number(form1.maxAge)}
           helperText={form1.minAge !== '' && form1.maxAge !== '' && Number(form1.minAge) > Number(form1.maxAge) ? 'Max age must be ≥ min age.' : undefined}
@@ -1250,7 +1251,6 @@ const ProgramWizardDialog: React.FC<ProgramWizardDialogProps> = ({
         value={form1.level}
         onChange={(e) => setForm1((f) => ({ ...f, level: e.target.value }))}
         fullWidth
-        size="small"
         placeholder="e.g. Beginner"
       />
 
@@ -1264,7 +1264,6 @@ const ProgramWizardDialog: React.FC<ProgramWizardDialogProps> = ({
           }
           onKeyDown={handleEquipmentKeyDown}
           fullWidth
-          size="small"
           helperText="Press Enter or comma to add"
         />
         {form1.requiredEquipment.length > 0 && (
@@ -1273,7 +1272,6 @@ const ProgramWizardDialog: React.FC<ProgramWizardDialogProps> = ({
               <Chip
                 key={item}
                 label={item}
-                size="small"
                 onDelete={() => removeEquipment(item)}
               />
             ))}
@@ -1320,7 +1318,6 @@ const ProgramWizardDialog: React.FC<ProgramWizardDialogProps> = ({
             value={stageInput}
             onChange={(e) => setStageInput(e.target.value)}
             onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleAddStage(); } }}
-            size="small"
             sx={{ flex: '2 1 130px' }}
             placeholder="e.g. Beginner"
             required
@@ -1329,13 +1326,11 @@ const ProgramWizardDialog: React.FC<ProgramWizardDialogProps> = ({
             label="Description (optional)"
             value={stageDescInput}
             onChange={(e) => setStageDescInput(e.target.value)}
-            size="small"
             sx={{ flex: '3 1 180px' }}
             placeholder="e.g. Introduction to water safety"
           />
           <Button
             variant="outlined"
-            size="small"
             startIcon={stageSubmitting ? <CircularProgress size={14} /> : <Plus size={14} />}
             onClick={handleAddStage}
             disabled={!stageInput.trim() || stageSubmitting}
@@ -1378,7 +1373,6 @@ const ProgramWizardDialog: React.FC<ProgramWizardDialogProps> = ({
           variant="outlined"
           startIcon={<Plus size={16} />}
           onClick={() => setShowLocationForm(true)}
-          size="small"
           sx={{ mt: 1 }}
         >
           Add Location

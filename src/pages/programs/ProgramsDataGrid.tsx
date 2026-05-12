@@ -72,13 +72,6 @@ export const ProgramsDataGrid: React.FC<ProgramsDataGridProps> = ({
       ),
     },
     {
-      field: "id",
-      headerName: "ID",
-      width: 100,
-      valueGetter: (value: string) =>
-        value ? `TT-P-${value.substring(0, 4).toUpperCase()}` : "",
-    },
-    {
       field: "name",
       headerName: "Program Name",
       flex: 1.5,
