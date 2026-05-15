@@ -26,13 +26,14 @@ import {
   Divider,
   Switch,
   FormControlLabel,
+  Tooltip,
 } from "@mui/material";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import { TimePicker } from "@mui/x-date-pickers/TimePicker";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import dayjs, { type Dayjs } from "dayjs";
-import { Plus, Trash2, Pencil, MapPin, Check, X } from "lucide-react";
+import { Plus, Trash2, Pencil, MapPin, Check, X, DollarSign } from "lucide-react";
 
 import { getProgramById, updateProgram } from "../../api/programs.api";
 import {
@@ -49,6 +50,7 @@ import {
 import { getAllClasses } from "../../api/classes.api";
 import { getAllLocations } from "../../api/locations.api";
 import { getAllInstructors } from "../../api/instructors.api";
+import { getDiscounts } from "../../api/discounts.api";
 import {
   createProgramStage,
   deleteProgramStage,
@@ -59,6 +61,7 @@ import {
   StageSkillCard,
   type WizardStage,
 } from "./ProgramWizardDialog";
+import PriceOptionsDialog from "./PriceOptionsDialog";
 import {
   displayTime,
   formatTime,
@@ -77,6 +80,7 @@ import type {
   DayOfWeek,
   SessionType,
   ProgramSkill,
+  Discount,
 } from "../../api/types";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -271,11 +275,13 @@ const ProgramDialog: React.FC<ProgramDialogProps> = ({
   const [classes, setClasses] = useState<Class[]>([]);
   const [locations, setLocations] = useState<Location[]>([]);
   const [instructors, setInstructors] = useState<Instructor[]>([]);
+  const [discounts, setDiscounts] = useState<Discount[]>([]);
 
   // Location inline edit state
   const [editingLocId, setEditingLocId] = useState<string | null>(null);
   const [locEditForm, setLocEditForm] = useState<LocEditForm | null>(null);
   const [locEditSubmitting, setLocEditSubmitting] = useState(false);
+  const [priceDialogLoc, setPriceDialogLoc] = useState<{ id: string; name: string } | null>(null);
 
   // Schedule inline edit state
   const [editingSchedKey, setEditingSchedKey] = useState<{
@@ -316,6 +322,7 @@ const ProgramDialog: React.FC<ProgramDialogProps> = ({
     getAllInstructors(1, 100)
       .then((r) => setInstructors(r.data))
       .catch(console.error);
+    getDiscounts().then(setDiscounts).catch(console.error);
 
     setFetchLoading(true);
     getProgramById(program.id)
@@ -842,12 +849,22 @@ const ProgramDialog: React.FC<ProgramDialogProps> = ({
           </Box>
           <Box sx={{ display: "flex", gap: 0.5 }}>
             {!isEditingLoc && (
-              <IconButton
-                onClick={() => startEditLocation(loc)}
-                sx={{ color: "primary.main" }}
-              >
-                <Pencil size={15} />
-              </IconButton>
+              <>
+                <Tooltip title="Manage Pricing & Discounts">
+                  <IconButton
+                    onClick={() => setPriceDialogLoc({ id: loc.programLocationId, name: loc.locationName })}
+                    sx={{ color: "success.main" }}
+                  >
+                    <DollarSign size={15} />
+                  </IconButton>
+                </Tooltip>
+                <IconButton
+                  onClick={() => startEditLocation(loc)}
+                  sx={{ color: "primary.main" }}
+                >
+                  <Pencil size={15} />
+                </IconButton>
+              </>
             )}
             <IconButton
               color="error"
@@ -1347,8 +1364,10 @@ const ProgramDialog: React.FC<ProgramDialogProps> = ({
           programId={program!.id}
           locations={locations}
           instructors={instructors}
+          discounts={discounts}
           onAdded={handleLocationAdded}
           onCancel={() => setShowLocationForm(false)}
+          onDiscountCreated={(d) => setDiscounts((prev) => [...prev, d])}
         />
       ) : (
         <Button
@@ -1367,6 +1386,7 @@ const ProgramDialog: React.FC<ProgramDialogProps> = ({
   // ── Render ───────────────────────────────────────────────────────────────────
 
   return (
+    <>
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="md">
       <DialogTitle sx={{ fontWeight: 800 }}>Edit Program</DialogTitle>
 
@@ -1470,6 +1490,16 @@ const ProgramDialog: React.FC<ProgramDialogProps> = ({
         )}
       </DialogActions>
     </Dialog>
+
+    {priceDialogLoc && (
+      <PriceOptionsDialog
+        open={!!priceDialogLoc}
+        onClose={() => setPriceDialogLoc(null)}
+        programLocationId={priceDialogLoc.id}
+        locationName={priceDialogLoc.name}
+      />
+    )}
+  </>
   );
 };
 

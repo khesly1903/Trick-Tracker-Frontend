@@ -2,6 +2,7 @@ import api from './axiosInstance';
 import type {
   StudentProgram,
   EnrollStudentDto,
+  EnrollmentBalance,
   GetEnrollmentsParams,
   UUID,
 } from './types';
@@ -34,3 +35,6 @@ export const softDisenroll = (id: UUID): Promise<StudentProgram> =>
  */
 export const hardDisenroll = (id: UUID): Promise<void> =>
   api.delete(`/student-programs/hard/${id}`).then((r) => r.data);
+
+export const getEnrollmentBalance = (id: UUID): Promise<EnrollmentBalance> =>
+  api.get(`/student-programs/${id}/balance`).then((r) => r.data);

@@ -31,6 +31,7 @@ import {
   Sun,
   ClipboardList,
   Activity,
+  TrendingUp,
 } from "lucide-react"
 
 import { useColorMode } from '../theme/ThemeContext';
@@ -61,6 +62,7 @@ const MainLayout: React.FC = () => {
     { text: 'Tracker', icon: <Activity strokeWidth={1} />, path: '/tracker' },
     { text: 'Attendance', icon: <UserCheck strokeWidth={1} />, path: '/attendance' },
     { text: 'Locations', icon: <MapPin strokeWidth={1} />, path: '/locations' },
+    { text: 'Accounting', icon: <TrendingUp strokeWidth={1} />, path: '/discounts' },
     { text: 'Management', icon: <Settings strokeWidth={1} />, path: '/management' },
   ];
 

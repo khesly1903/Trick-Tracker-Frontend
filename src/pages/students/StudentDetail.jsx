@@ -1,3 +1,4 @@
+// @ts-ignore
 import React, { useEffect, useState } from "react";
 import {
   Dialog,
@@ -12,7 +13,13 @@ import {
   Chip,
   CircularProgress,
   Paper,
+  Tooltip,
+  IconButton,
 } from "@mui/material";
+// @ts-ignore
+import PaymentsDialog from "./PaymentsDialog";
+// @ts-ignore
+import PaymentPlanDialog from "./PaymentPlanDialog";
 import {
   Phone,
   Mail,
@@ -23,6 +30,8 @@ import {
   Users,
   GraduationCap,
   MapPin,
+  CreditCard,
+  CalendarClock,
 } from "lucide-react";
 import { getStudentById } from "../../api/students.api";
 
@@ -74,12 +83,16 @@ const StudentDetailDialog = ({ open, onClose, student }) => {
     }
   }, [open, student?.id]);
 
+  const [paymentsEnrollment, setPaymentsEnrollment] = useState(null);
+  const [planOpen, setPlanOpen] = useState(false);
+
   if (!student) return null;
   const s = fullStudent || student;
   const contacts = fullStudent?.studentContacts || [];
   const programs = (fullStudent?.studentPrograms || []).filter((sp) => sp.isActive);
 
   return (
+    <>
     <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
       <DialogTitle sx={{ pb: 1 }}>
         <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
@@ -169,21 +182,49 @@ const StudentDetailDialog = ({ open, onClose, student }) => {
 
             {/* ── Col 3: Programs ── */}
             <Box sx={{ ...COL_SX, bgcolor: "action.hover" }}>
-              <SectionHeader icon={<GraduationCap size={15} />} label="Enrolled Programs" />
+              <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 1.5 }}>
+                <Typography variant="subtitle2" fontWeight={700} sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                  <GraduationCap size={15} />
+                  Enrolled Programs
+                </Typography>
+                {programs.length > 0 && (
+                  <Tooltip title="Payment Plan">
+                    <IconButton size="small" onClick={() => setPlanOpen(true)}>
+                      <CalendarClock size={14} />
+                    </IconButton>
+                  </Tooltip>
+                )}
+              </Box>
+              <Divider sx={{ mb: 1.5 }} />
               {programs.length > 0 ? (
                 <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
                   {programs.map((sp) => {
                     const prog = sp.programLocation?.program;
                     const loc = sp.programLocation?.location;
+                    const label = `${prog?.name || "—"}${loc?.name ? ` @ ${loc.name}` : ""}`;
                     return (
-                      <Paper key={sp.id} variant="outlined" sx={{ px: 2, py: 1.5, borderRadius: 1, bgcolor: "background.paper" }}>
-                        <Typography variant="body2" fontWeight={600}>{prog?.name || "—"}</Typography>
-                        {loc?.name && (
-                          <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, mt: 0.25 }}>
-                            <MapPin size={12} color="gray" />
-                            <Typography variant="caption" color="text.secondary">{loc.name}</Typography>
+                      <Paper key={sp.id} variant="outlined" sx={{ px: 1.5, py: 1, borderRadius: 1, bgcolor: "background.paper" }}>
+                        <Box sx={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between" }}>
+                          <Box>
+                            <Typography variant="body2" fontWeight={600}>{prog?.name || "—"}</Typography>
+                            {loc?.name && (
+                              <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, mt: 0.25 }}>
+                                <MapPin size={12} color="gray" />
+                                <Typography variant="caption" color="text.secondary">{loc.name}</Typography>
+                              </Box>
+                            )}
+                            {sp.finalPrice != null && (
+                              <Typography variant="caption" color="primary.main" fontWeight={600}>
+                                ${sp.finalPrice.toFixed(2)}
+                              </Typography>
+                            )}
                           </Box>
-                        )}
+                          <Tooltip title="Payments">
+                            <IconButton size="small" onClick={() => setPaymentsEnrollment({ id: sp.id, label })}>
+                              <CreditCard size={14} />
+                            </IconButton>
+                          </Tooltip>
+                        </Box>
                       </Paper>
                     );
                   })}
@@ -201,6 +242,25 @@ const StudentDetailDialog = ({ open, onClose, student }) => {
         <Button onClick={onClose}>Close</Button>
       </DialogActions>
     </Dialog>
+
+    {planOpen && (
+      <PaymentPlanDialog
+        open={planOpen}
+        onClose={() => setPlanOpen(false)}
+        studentId={s.id}
+        studentName={`${s.name} ${s.surname}`}
+      />
+    )}
+
+    {paymentsEnrollment && (
+      <PaymentsDialog
+        open={!!paymentsEnrollment}
+        onClose={() => setPaymentsEnrollment(null)}
+        studentProgramId={paymentsEnrollment.id}
+        enrollmentLabel={paymentsEnrollment.label}
+      />
+    )}
+    </>
   );
 };
 

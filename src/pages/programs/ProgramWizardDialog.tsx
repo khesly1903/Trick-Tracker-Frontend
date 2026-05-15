@@ -24,6 +24,8 @@ import {
   IconButton,
   Paper,
   Divider,
+  Switch,
+  FormControlLabel,
 } from '@mui/material';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
@@ -46,6 +48,9 @@ import { createProgramStage, deleteProgramStage, updateProgramStage } from '../.
 import { addSkillsToStage, getSkillsByStageId, deleteProgramSkill, updateProgramSkill } from '../../api/programSkills.api';
 import { getAllInstructors } from '../../api/instructors.api';
 import { getAllLocations } from '../../api/locations.api';
+import { getDiscounts, createDiscount } from '../../api/discounts.api';
+import { createPriceOption } from '../../api/priceOptions.api';
+import { createDiscountOverride } from '../../api/discountOverrides.api';
 
 import type {
   Class,
@@ -55,6 +60,9 @@ import type {
   ProgramStage,
   ProgramSkill,
   SkillType,
+  Discount,
+  PriceKind,
+  DiscountType,
 } from '../../api/types';
 
 import {
@@ -504,29 +512,146 @@ export const LocationCard: React.FC<LocationCardProps> = ({
 
 // ─── AddLocationForm ──────────────────────────────────────────────────────────
 
+interface PriceRow {
+  localId: string;
+  name: string;
+  amount: string;
+  kind: PriceKind;
+  billingMode: '' | 'MONTH_BASED' | 'DATE_BASED';
+  isDefault: boolean;
+}
+
+const emptyPriceRow = (): PriceRow => ({
+  localId: Math.random().toString(36).slice(2),
+  name: '',
+  amount: '',
+  kind: 'CUSTOM',
+  billingMode: '',
+  isDefault: false,
+});
+
+const PRICE_KIND_OPTIONS: { value: PriceKind; label: string }[] = [
+  { value: 'MONTHLY', label: 'Monthly' },
+  { value: 'WALK_IN', label: 'Walk-in' },
+  { value: 'FULL_PROGRAM', label: 'Full Program' },
+  { value: 'CUSTOM', label: 'Custom' },
+];
+
+// ─── DiscountSection ──────────────────────────────────────────────────────────
+
+interface DiscountSectionProps {
+  discounts: Discount[];
+  selectedDiscountIds: string[];
+  onToggle: (id: string) => void;
+  onDiscountCreated: (d: Discount) => void;
+}
+
+const DiscountSection: React.FC<DiscountSectionProps> = ({ discounts, selectedDiscountIds, onToggle, onDiscountCreated }) => {
+  const [adding, setAdding] = useState(false);
+  const [name, setName] = useState('');
+  const [value, setValue] = useState('');
+  const [type, setType] = useState<DiscountType>('PERCENTAGE');
+  const [saving, setSaving] = useState(false);
+  const [err, setErr] = useState('');
+
+  const reset = () => { setAdding(false); setName(''); setValue(''); setType('PERCENTAGE'); setErr(''); };
+
+  const handleSave = async () => {
+    if (!name.trim()) { setErr('Name required.'); return; }
+    if (!value || isNaN(Number(value)) || Number(value) <= 0) { setErr('Valid value required.'); return; }
+    setSaving(true);
+    try {
+      const d = await createDiscount({ name: name.trim(), value: Number(value), type });
+      onDiscountCreated(d);
+      reset();
+    } catch {
+      setErr('Failed to create discount.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <Box>
+      <Typography variant="caption" color="text.secondary" fontWeight={600}>DISCOUNTS</Typography>
+      {discounts.length > 0 && (
+        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.75, mt: 1 }}>
+          {discounts.map((d) => {
+            const selected = selectedDiscountIds.includes(d.id);
+            return (
+              <Chip
+                key={d.id}
+                label={`${d.name} (${d.type === 'PERCENTAGE' ? `${d.value}%` : `$${d.value}`})`}
+                size="small"
+                variant={selected ? 'filled' : 'outlined'}
+                color={selected ? 'primary' : 'default'}
+                onClick={() => onToggle(d.id)}
+                clickable
+              />
+            );
+          })}
+        </Box>
+      )}
+      {adding ? (
+        <Paper variant="outlined" sx={{ p: 1.5, mt: 1, borderRadius: '0.5rem' }}>
+          {err && <Alert severity="error" sx={{ mb: 1, py: 0 }}>{err}</Alert>}
+          <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+            <TextField label="Name" value={name} onChange={(e) => setName(e.target.value)} sx={{ flex: '2 1 140px' }} />
+            <TextField
+              label={type === 'PERCENTAGE' ? 'Value (%)' : 'Value ($)'}
+              type="number"
+              value={value}
+              onChange={(e) => setValue(e.target.value)}
+              sx={{ flex: '1 1 90px' }}
+              inputProps={{ min: 0 }}
+            />
+            <TextField select label="Type" value={type} onChange={(e) => setType(e.target.value as DiscountType)} sx={{ flex: '1 1 110px' }}>
+              <MenuItem value="PERCENTAGE">Percentage</MenuItem>
+              <MenuItem value="FLAT">Flat</MenuItem>
+            </TextField>
+          </Box>
+          <Box sx={{ display: 'flex', gap: 0.5, mt: 1, justifyContent: 'flex-end' }}>
+            <IconButton size="small" onClick={reset}><X size={15} /></IconButton>
+            <IconButton size="small" color="primary" onClick={handleSave} disabled={saving}><Check size={15} /></IconButton>
+          </Box>
+        </Paper>
+      ) : (
+        <Button startIcon={<Plus size={14} />} onClick={() => setAdding(true)} sx={{ mt: 0.5 }}>
+          Add Custom Discount
+        </Button>
+      )}
+    </Box>
+  );
+};
+
 export interface AddLocationFormProps {
   programId: string;
   locations: Location[];
   instructors: Instructor[];
+  discounts: Discount[];
   onAdded: (loc: AddedLocation) => void;
   onCancel: () => void;
+  onDiscountCreated?: (d: Discount) => void;
 }
 
 export const AddLocationForm: React.FC<AddLocationFormProps> = ({
   programId,
   locations,
   instructors,
+  discounts,
   onAdded,
   onCancel,
+  onDiscountCreated,
 }) => {
   const [locationId, setLocationId] = useState('');
-  const [price, setPrice] = useState('');
   const [capacity, setCapacity] = useState('');
   const [instructorId, setInstructorId] = useState('');
   const [backupInstructorIds, setBackupInstructorIds] = useState<string[]>([]);
   const [scheduleRows, setScheduleRows] = useState<ScheduleFormRow[]>([
     emptyScheduleRow(),
   ]);
+  const [priceRows, setPriceRows] = useState<PriceRow[]>([emptyPriceRow()]);
+  const [selectedDiscountIds, setSelectedDiscountIds] = useState<string[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
@@ -540,8 +665,6 @@ export const AddLocationForm: React.FC<AddLocationFormProps> = ({
 
   const validate = (): string | null => {
     if (!locationId) return 'Location is required.';
-    if (price === '') return 'Price is required.';
-    if (Number(price) < 0) return 'Price must be ≥ 0.';
     if (capacity === '') return 'Capacity is required.';
     if (Number(capacity) < 1) return 'Capacity must be ≥ 1.';
     for (const row of scheduleRows) {
@@ -568,7 +691,7 @@ export const AddLocationForm: React.FC<AddLocationFormProps> = ({
       const loc = await createProgramLocation({
         programId,
         locationId,
-        price: Number(price),
+        price: 0,
         capacity: Number(capacity),
         instructorId: instructorId || undefined,
         backupInstructorIds:
@@ -603,6 +726,30 @@ export const AddLocationForm: React.FC<AddLocationFormProps> = ({
         });
       }
 
+      // Create price options
+      const validPriceRows = priceRows.filter((r) => r.name.trim() && r.amount !== '');
+      const invalidMonthly = validPriceRows.find((r) => r.kind === 'MONTHLY' && !r.billingMode);
+      if (invalidMonthly) {
+        setError('Monthly price options require a billing mode.');
+        setSubmitting(false);
+        return;
+      }
+      await Promise.all(validPriceRows.map((r) =>
+        createPriceOption({
+          programLocationId: loc.id,
+          name: r.name.trim(),
+          amount: Number(r.amount),
+          kind: r.kind,
+          billingMode: r.kind === 'MONTHLY' && r.billingMode ? r.billingMode : undefined,
+          isDefault: r.isDefault,
+        })
+      ));
+
+      // Create discount overrides
+      await Promise.all(selectedDiscountIds.map((discountId) =>
+        createDiscountOverride({ programLocationId: loc.id, discountId, isEnabled: true })
+      ));
+
       const instructor = instructors.find((i) => i.id === instructorId);
       const location = locations.find((l) => l.id === locationId);
 
@@ -610,7 +757,7 @@ export const AddLocationForm: React.FC<AddLocationFormProps> = ({
         programLocationId: loc.id,
         locationId,
         locationName: location?.name ?? locationId,
-        price: Number(price),
+        price: 0,
         capacity: Number(capacity),
         instructorId: instructorId || undefined,
         instructorName: instructor
@@ -666,26 +813,15 @@ export const AddLocationForm: React.FC<AddLocationFormProps> = ({
           ))}
         </TextField>
 
-        <Box sx={{ display: 'flex', gap: 1.5 }}>
-          <TextField
-            label="Price"
-            type="number"
-            value={price}
-            onChange={(e) => setPrice(e.target.value)}
-            required
-            fullWidth
-            inputProps={{ min: 0 }}
-          />
-          <TextField
-            label="Capacity"
-            type="number"
-            value={capacity}
-            onChange={(e) => setCapacity(e.target.value)}
-            required
-            fullWidth
-            inputProps={{ min: 1 }}
-          />
-        </Box>
+        <TextField
+          label="Capacity"
+          type="number"
+          value={capacity}
+          onChange={(e) => setCapacity(e.target.value)}
+          required
+          fullWidth
+          inputProps={{ min: 1 }}
+        />
 
         <TextField
           select
@@ -857,6 +993,86 @@ export const AddLocationForm: React.FC<AddLocationFormProps> = ({
             Add Another Schedule
           </Button>
         </Box>
+
+        {/* Price Options */}
+        <Box>
+          <Typography variant="caption" color="text.secondary" fontWeight={600}>
+            PRICES
+          </Typography>
+          {priceRows.map((row, idx) => (
+            <Paper key={row.localId} variant="outlined" sx={{ p: 1.5, mt: 1, borderRadius: '0.5rem' }}>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
+                <Typography variant="caption" color="text.secondary">Price Option {idx + 1}</Typography>
+                {priceRows.length > 1 && (
+                  <IconButton color="error" sx={{ p: 0.25 }} onClick={() => setPriceRows((rows) => rows.filter((r) => r.localId !== row.localId))}>
+                    <Trash2 size={14} />
+                  </IconButton>
+                )}
+              </Box>
+              <Box sx={{ display: 'flex', gap: 1, mb: 1, flexWrap: 'wrap' }}>
+                <TextField
+                  label="Name"
+                  value={row.name}
+                  onChange={(e) => setPriceRows((rows) => rows.map((r) => r.localId === row.localId ? { ...r, name: e.target.value } : r))}
+                  sx={{ flex: '2 1 140px' }}
+                  placeholder="e.g. Monthly"
+                />
+                <TextField
+                  label="Amount ($)"
+                  type="number"
+                  value={row.amount}
+                  onChange={(e) => setPriceRows((rows) => rows.map((r) => r.localId === row.localId ? { ...r, amount: e.target.value } : r))}
+                  sx={{ flex: '1 1 90px' }}
+                  inputProps={{ min: 0 }}
+                />
+                <TextField
+                  select
+                  label="Kind"
+                  value={row.kind}
+                  onChange={(e) => setPriceRows((rows) => rows.map((r) => r.localId === row.localId ? { ...r, kind: e.target.value as PriceKind, billingMode: '' } : r))}
+                  sx={{ flex: '1 1 110px' }}
+                >
+                  {PRICE_KIND_OPTIONS.map((k) => <MenuItem key={k.value} value={k.value}>{k.label}</MenuItem>)}
+                </TextField>
+                {row.kind === 'MONTHLY' && (
+                  <TextField
+                    select
+                    label="Billing Mode"
+                    value={row.billingMode}
+                    onChange={(e) => setPriceRows((rows) => rows.map((r) => r.localId === row.localId ? { ...r, billingMode: e.target.value as PriceRow['billingMode'] } : r))}
+                    sx={{ flex: '1 1 150px' }}
+                  >
+                    <MenuItem value="MONTH_BASED">Calendar Month</MenuItem>
+                    <MenuItem value="DATE_BASED">Enrollment Day</MenuItem>
+                  </TextField>
+                )}
+              </Box>
+              <FormControlLabel
+                control={
+                  <Switch
+                    checked={row.isDefault}
+                    onChange={(e) => setPriceRows((rows) => rows.map((r) => r.localId === row.localId ? { ...r, isDefault: e.target.checked } : { ...r, isDefault: false }))}
+                  />
+                }
+                label="Default"
+              />
+            </Paper>
+          ))}
+          <Button startIcon={<Plus size={14} />} onClick={() => setPriceRows((rows) => [...rows, emptyPriceRow()])} sx={{ mt: 1 }}>
+            Add Price Option
+          </Button>
+        </Box>
+
+        {/* Discounts */}
+        <DiscountSection
+          discounts={discounts}
+          selectedDiscountIds={selectedDiscountIds}
+          onToggle={(id) => setSelectedDiscountIds((ids) => ids.includes(id) ? ids.filter((x) => x !== id) : [...ids, id])}
+          onDiscountCreated={(d) => {
+            onDiscountCreated?.(d);
+            setSelectedDiscountIds((ids) => [...ids, d.id]);
+          }}
+        />
       </Box>
 
       <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1, mt: 2 }}>
@@ -914,12 +1130,14 @@ const ProgramWizardDialog: React.FC<ProgramWizardDialogProps> = ({
   const [classes, setClasses] = useState<Class[]>([]);
   const [locations, setLocations] = useState<Location[]>([]);
   const [instructors, setInstructors] = useState<Instructor[]>([]);
+  const [discounts, setDiscounts] = useState<Discount[]>([]);
 
   useEffect(() => {
     if (!open) return;
     getAllClasses().then(setClasses).catch(console.error);
     getAllLocations().then(setLocations).catch(console.error);
     getAllInstructors(1, 100).then((r) => setInstructors(r.data)).catch(console.error);
+    getDiscounts().then(setDiscounts).catch(console.error);
   }, [open]);
 
   useEffect(() => {
@@ -1365,8 +1583,10 @@ const ProgramWizardDialog: React.FC<ProgramWizardDialogProps> = ({
           programId={programId!}
           locations={locations}
           instructors={instructors}
+          discounts={discounts}
           onAdded={handleLocationAdded}
           onCancel={() => setShowLocationForm(false)}
+          onDiscountCreated={(d) => setDiscounts((prev) => [...prev, d])}
         />
       ) : (
         <Button

@@ -61,6 +61,10 @@ export type SkillType = "SKILL" | "TRICK";
 export type ClassType = "PRIVATE" | "GROUP" | "MAKEUP" | "WORKSHOP" | "EVENT";
 export type SessionType = "CLASS" | "MAKEUP" | "CANCELLED" | "EVENT";
 export type Gender = "BOYS" | "GIRLS" | "ALL_GENDER";
+export type PriceKind = "MONTHLY" | "WALK_IN" | "FULL_PROGRAM" | "CUSTOM";
+export type MonthlyBillingMode = "MONTH_BASED" | "DATE_BASED";
+export type DiscountType = "PERCENTAGE" | "FLAT";
+export type PaymentType = "PAYMENT" | "REFUND" | "ADJUSTMENT";
 
 export interface ProgramStage {
   id: UUID;
@@ -180,10 +184,132 @@ export interface ProgramSchedule {
   type: SessionType;
 }
 
+export interface PriceOption {
+  id: UUID;
+  programLocationId: UUID;
+  name: string;
+  amount: number;
+  kind: PriceKind;
+  sessionsCovered?: number | null;
+  billingMode?: MonthlyBillingMode | null;
+  description?: string | null;
+  isActive: boolean;
+  isDefault: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface Discount {
+  id: UUID;
+  academyId: UUID;
+  name: string;
+  value: number;
+  type: DiscountType;
+  description?: string | null;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface DiscountOverride {
+  id: UUID;
+  discountId: UUID;
+  programLocationId: UUID;
+  isEnabled: boolean;
+  valueOverride?: number | null;
+  typeOverride?: DiscountType | null;
+  discount?: Discount;
+}
+
+export interface Payment {
+  id: UUID;
+  studentProgramId: UUID;
+  amount: number;
+  paidAt: string;
+  method?: string | null;
+  note?: string | null;
+  type: PaymentType;
+  createdById?: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface MonthlyPeriod {
+  label: string;
+  dueDate: string;
+  amount: number;
+}
+
+export interface EnrollmentBalance {
+  finalPrice: number;
+  totalExpected: number;
+  totalPaid: number;
+  balance: number;
+  monthlySchedule?: MonthlyPeriod[];
+}
+
+export interface AccountingMonth {
+  label: string;
+  monthKey: string;
+  expected: number;
+  revenue: number;
+}
+
+export interface AccountingTimeline {
+  months: AccountingMonth[];
+  totals: { expected: number; revenue: number };
+}
+
+export interface AccountingProgramSummary {
+  id: UUID;
+  name: string;
+  enrolled: number;
+  expected: number;
+  revenue: number;
+}
+
+export interface PaymentPlanLine {
+  enrollmentId: UUID;
+  programName: string;
+  locationName: string;
+  amount: number;
+  dueDate: string;
+  paid: boolean;
+  isActive: boolean;
+}
+
+export interface PaymentPlanMonth {
+  monthKey: string;
+  label: string;
+  totalDue: number;
+  totalPaid: number;
+  status: 'paid' | 'overdue' | 'upcoming' | 'partial';
+  lines: PaymentPlanLine[];
+}
+
+export interface PaymentPlan {
+  studentId: UUID;
+  studentName: string;
+  totalExpected: number;
+  totalPaid: number;
+  balance: number;
+  months: PaymentPlanMonth[];
+}
+
+export interface AccountingLocationSummary {
+  id: UUID;
+  name: string;
+  enrolled: number;
+  expected: number;
+  revenue: number;
+  programs: AccountingProgramSummary[];
+}
+
 export interface ProgramLocation {
   id: UUID;
   programId: UUID;
   locationId: UUID;
+  /** @deprecated use priceOptions instead */
   price: number;
   capacity: number;
   instructorId?: UUID;
@@ -193,6 +319,8 @@ export interface ProgramLocation {
   backupInstructors?: Instructor[];
   schedules?: ProgramSchedule[];
   program?: Program;
+  priceOptions?: PriceOption[];
+  discountOverrides?: DiscountOverride[];
   _count?: { sessions: number; studentPrograms: number };
 }
 
@@ -249,12 +377,24 @@ export interface StudentProgram {
   studentId: UUID;
   programLocationId: UUID;
   isActive: boolean;
+  priceOptionId?: UUID | null;
+  basePriceSnapshot?: number | null;
+  priceKindSnapshot?: PriceKind | null;
+  sessionsCoveredSnapshot?: number | null;
+  monthlyBillingModeSnapshot?: MonthlyBillingMode | null;
+  discountId?: UUID | null;
+  discountSnapshot?: { name: string; value: number; type: DiscountType } | null;
+  finalPrice?: number | null;
+  enrolledAt?: string;
   student?: { id: UUID; name: string; surname: string };
   programLocation?: {
     id: UUID;
     program: { id: UUID; name: string };
     location: { id: UUID; name: string; address: string };
   };
+  priceOption?: PriceOption | null;
+  discount?: Discount | null;
+  payments?: Payment[];
 }
 
 export interface StudentProgramSkill {
@@ -438,6 +578,71 @@ export interface BulkAddProgramSkillsDto {
 export interface EnrollStudentDto {
   studentId: UUID;
   programLocationId: UUID;
+  priceOptionId?: UUID;
+  discountId?: UUID;
+  enrollmentStartDate?: string;
+  overrideBasePrice?: number;
+}
+
+export interface CreatePriceOptionDto {
+  programLocationId: UUID;
+  name: string;
+  amount: number;
+  kind?: PriceKind;
+  sessionsCovered?: number;
+  billingMode?: MonthlyBillingMode;
+  description?: string;
+  isDefault?: boolean;
+}
+
+export interface UpdatePriceOptionDto {
+  name?: string;
+  amount?: number;
+  kind?: PriceKind;
+  sessionsCovered?: number;
+  billingMode?: MonthlyBillingMode;
+  description?: string;
+  isDefault?: boolean;
+  isActive?: boolean;
+}
+
+export interface CreateDiscountDto {
+  name: string;
+  value: number;
+  type: DiscountType;
+  description?: string;
+  isActive?: boolean;
+}
+
+export interface UpdateDiscountDto {
+  name?: string;
+  value?: number;
+  type?: DiscountType;
+  description?: string;
+  isActive?: boolean;
+}
+
+export interface CreateDiscountOverrideDto {
+  discountId: UUID;
+  programLocationId: UUID;
+  isEnabled?: boolean;
+  valueOverride?: number;
+  typeOverride?: DiscountType;
+}
+
+export interface UpdateDiscountOverrideDto {
+  isEnabled?: boolean;
+  valueOverride?: number;
+  typeOverride?: DiscountType;
+}
+
+export interface CreatePaymentDto {
+  studentProgramId: UUID;
+  amount: number;
+  paidAt: string;
+  method?: string;
+  note?: string;
+  type?: PaymentType;
 }
 
 export interface BulkAttendanceDto {
